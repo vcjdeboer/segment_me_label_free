@@ -1,0 +1,338 @@
+---
+title: "figure_3"
+author: "vb"
+format: html
+editor: visual
+---
+
+## Density plots - figure 3
+
+### functions and libraries
+
+```{r}
+
+#libraries
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(tidyverse)
+library(pipeR)
+
+library(mclust)
+library(ggdist)
+
+#percentage_crop
+
+#manual_crop
+
+#get_intermediate_images
+
+```
+
+### set parameters and input
+
+```{r}
+
+#individual_filpath_C08_221207_BF
+
+my_crop_percentage <- 0.05
+my_isoblur <- 1
+my_k <- 0.1
+my_ws <- 39
+my_clean <-  0
+my_grow <- 0
+my_shrink <- 4
+
+```
+
+### plot the densities (figure 3B)
+
+```{r}
+#| fig-width: 10.5
+
+tessels_C08 <- 
+    individual_filpath_C08_221207_BF %>%  
+      get_intermediate_images(.,
+        crop_percentage = my_crop_percentage,
+        my_isoblur = my_isoblur,
+        my_k = my_k, 
+        my_ws = my_ws,
+        my_clean = my_clean,
+        my_grow = my_grow, 
+        my_shrink = my_shrink) %>% 
+  pluck("shrink") %>% 
+  get_features_BF_for_mini() %>% 
+  do_tesselation(well_name = "C08", 
+                 boundary_box = c(0, pixset_dims %>% nth(1), 
+                                0, pixset_dims %>%  nth(2)))
+
+model_C08 <- tessels_C08 %>% 
+  pull(dir.area) %>% 
+  densityMclust(., G= 3, 
+                modelName = "V",
+                plot = FALSE, verbose = FALSE) 
+  
+
+x <- model_C08 %>% pluck("data") 
+x0 <- extendrange(x, f = 0.1)
+x0 <- seq(x0[1], x0[2], length = 600)
+
+cdens <- predict(model_C08, newdata = x0, what = "cdens")
+cdens_mod3 <- sweep(cdens, 2, model_C08$parameters$pro, "*")
+
+cdens_mod3_w <- cdens_mod3 %>% 
+  as_tibble() %>% 
+  rename(cluster1 = '1',
+         cluster2 = '2',
+         cluster3 = '3') %>% 
+  mutate(all_clusters = cluster1+cluster2+cluster3) %>% 
+  mutate(x0 = x0) %>% 
+  pivot_longer(cols = c(-x0), names_to = "class", values_to = "values") 
+  
+my_class_colors <- c("#E41A1C","#4DAF4A", "#377EB8") #from RColorBrewer::brewer.pal(3, "Set1"))
+
+ggplot() +
+  ggdist::stat_slab(
+    data = x %>% as_tibble(),
+    mapping = aes(x = V1),
+    density = "histogram",
+    alpha = 0.4,
+    side = "top",
+    color = "grey40",
+    fill = "grey",
+    outline_bars = TRUE,
+    linewidth = 0.5,
+    breaks = 50) +
+  geom_line(
+    data = cdens_mod3_w,
+    mapping = aes(
+      x = x0, 
+      y = values %>% scales::rescale(., to = c(0, 1)),
+      color = class,
+      linetype = class),
+    linewidth = 1,) +
+  scale_color_manual(
+    values =
+      c("black", my_class_colors)) +
+  scale_linetype_manual(
+    values =
+      c("solid", "5151", "5151", "5151")) +
+  #xlim(c(-100, 500)) +
+  labs(
+    x = "Tile area",
+    y = "Density") +
+  theme_BF_larger()
+
+ggplot() +
+  ggdist::stat_slab(
+    data = x %>% as_tibble(),
+    mapping = aes(x = V1),
+    density = "histogram",
+    alpha = 0.4,
+    side = "top",
+    color = "grey40",
+    fill = "grey",
+    outline_bars = TRUE,
+    linewidth = 0.5,
+    breaks = 50) +
+  geom_line(
+    data = cdens_mod3_w %>% filter(class == "all_clusters"),
+    mapping = aes(
+      x = x0,
+      y = values %>% scales::rescale(., to = c(0, 1)),
+      color = class,
+      linetype = class),
+    linewidth = 1,) +
+  scale_color_manual(
+    values =
+      c("black", RColorBrewer::brewer.pal(9, "Set1"))) +
+  scale_linetype_manual(
+    values =
+      c("solid", "5151", "5151", "5151")) +
+  #xlim(c(-100, 500)) +
+  labs(
+    x = "Tile area",
+    y = "Density") +
+  theme_BF_larger()
+
+
+```
+
+### Voronoi colored by classification (figure 3C)
+
+```{r}
+
+tibble(classification =  model_C08 %>% pluck("classification"),
+       dir.area = model_C08 %>% pluck("data")) %>% 
+  left_join(tessels_C08, by = c("dir.area")) %>% 
+  ggplot() +
+      ggforce::geom_voronoi_tile(
+        aes(x=x,
+            y=y,
+            fill = as.factor(classification),
+            group = -1L),
+        color = "black",
+        linewidth = 0.5,
+        bound = c(0, pixset_dims %>% nth(1), 
+                                -pixset_dims %>%  nth(2), 0),
+        normalize = FALSE) +
+      scale_y_reverse()+
+      colorspace::scale_fill_discrete_qualitative(palette = "Dark 3",
+                                                 name = "Classification")+
+      empty_theme() +
+      coord_fixed() 
+  
+
+
+```
+
+### voronoi with image background (figure 5E)
+
+```{r}
+
+#pixset_dims
+
+```
+
+
+```{r}
+#| fig-width: 8.136
+#| fig-height: 5.992
+
+raster <- individual_filpath_C08_221207_BF %>% 
+                 EBImage::readImage() %>%
+                 percentage_crop() %>%   as.raster()
+
+ tessels_C08 %>%
+  ggplot() +
+      annotation_raster(raster,0, 1017, -749, 0 )+
+      ggforce::geom_voronoi_segment(
+        aes(x=x,
+            y=y,
+            group = -1L),
+        color = "black",
+        #fill = "white",
+        linewidth = 0.7,
+        bound = c(0, pixset_dims %>% nth(1), 
+                                -pixset_dims %>%  nth(2), 0),
+        normalize = FALSE) +
+      scale_y_reverse() +
+  theme_void()
+      #scale_fill_gradientn(colours = rev(colorspace::heat_hcl(7)))
+
+```
+
+### for illustrator (figure 3A)
+
+```{r}
+
+#screenshot is loesoe....
+dims_ill <- "/Users/vincentdeboer/Desktop/Screenshot 2024-03-22 at 14.08.06.png" %>% 
+  EBImage::readImage() %>%  dim()
+
+illustrator_xy <- 
+  "/Users/vincentdeboer/Desktop/Screenshot 2024-03-22 at 14.08.06.png" %>% 
+  EBImage::readImage() %>%
+  magick::image_read() %>%
+  magick::image_negate() %>% 
+    imager::magick2cimg() %>%
+    imager::grayscale() %>% 
+    imager::threshold() %>% 
+    EBImage::Image() %>% 
+    EBImage::getFrame(1) %>% 
+    EBImage::bwlabel() %>% 
+    EBImage::computeFeatures.moment() %>% 
+    tidyr::as_tibble() %>% 
+    select(x = m.cx, y = m.cy)
+
+tessels_ill <- illustrator_xy %>% 
+  do_tesselation(well_name = "well",
+                 boundary_box = c(0, dims_ill %>%  nth(1),
+                                  0, dims_ill %>%  nth(2)))
+
+tessels_ill %>%
+  ggplot() +
+      ggforce::geom_voronoi_segment(
+        aes(x=x,
+            y=y,
+            group = -1L),
+        color = "black",
+        #fill = "white",
+        linewidth = 0.7,
+        bound = c(0, dims_ill %>% nth(1), 
+                                -dims_ill %>%  nth(2), 0),
+        normalize = FALSE) +
+      scale_y_reverse() +
+  theme_void()
+
+
+```
+
+### crop for cell size count (figure 3E)
+
+#### functions and libraries
+
+```{r}
+
+#libraries
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(tidyverse)
+library(pipeR)
+
+#percentage_crop
+
+#manual_crop
+
+#get_intermediate_images
+
+```
+
+#### set parameters and input
+
+```{r}
+
+#individual_filpath_C08_221207_BF
+
+my_crop_percentage <- 0.05
+my_isoblur <- 1
+my_k <- 0.1
+my_ws <- 39
+my_clean <-  0
+my_grow <- 0
+my_shrink <- 4
+
+```
+
+
+#### run
+
+```{r}
+#| fig-width: 8.285
+#| fig-height: 7.1
+#| 
+individual_filpath_C08_221207_BF %>%  
+      get_intermediate_images(.,
+        crop_percentage = my_crop_percentage,
+        my_isoblur = my_isoblur,
+        my_k = my_k, 
+        my_ws = my_ws,
+        my_clean = my_clean,
+        my_grow = my_grow, 
+        my_shrink = my_shrink) %>% 
+      keep(names(.) %in% c("shrink")) %>% 
+    purrr::map(.x = .,
+        .f = ~.x %>% 
+          EBImage::Image() %>%  
+          manual_crop(crop_y_left = 0.1,
+              crop_y_right = 0.6,
+              crop_x_low = 0.25,
+              crop_x_up = 0.4) %>%  plot)
+
+
+```

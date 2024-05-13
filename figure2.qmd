@@ -1,0 +1,167 @@
+---
+title: "figure_2"
+author: "vb"
+format: html
+editor: visual
+---
+
+
+## Figure 2 - seeds and voronois
+
+### functions and library
+
+```{r}
+
+#libraries
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(tidyverse)
+library(pipeR)
+
+#percentage_crop
+
+#manual_crop
+
+#get_intermediate_images
+
+#get_features_BF_for_mini
+
+#do_tesselation
+
+#prepare_colors
+
+#cook_plot_new
+
+```
+
+### set parameters and input
+
+```{r}
+
+#individual_filpath_C08_221207_BF
+
+#pixset_dims
+
+
+```
+
+### no crop seeds
+
+```{r}
+#| fig-width: 8.136
+#| fig-height: 5.992
+
+individual_filpath_C08_221207_BF %>%  
+  get_intermediate_images(.,
+    crop_percentage = my_crop_percentage,
+    my_isoblur = my_isoblur,
+    my_k = my_k, 
+    my_ws = my_ws,
+    my_clean = my_clean,
+    my_grow = my_grow, 
+    my_shrink = my_shrink) %>% 
+  pluck("shrink") %>% 
+  get_features_BF_for_mini() %>% 
+  ggplot(aes(x  = x, y = -y))+
+  geom_point(size = 2, color = "darkgreen", alpha = 0.6)+
+  theme_void()
+
+```
+
+### cropped seeds
+
+```{r}
+#| fig-width: 8.285
+#| fig-height: 7.1
+
+individual_filpath_C08_221207_BF %>%  
+  get_intermediate_images(.,
+    crop_percentage = my_crop_percentage,
+    my_isoblur = my_isoblur,
+    my_k = my_k, 
+    my_ws = my_ws,
+    my_clean = my_clean,
+    my_grow = my_grow, 
+    my_shrink = my_shrink)
+  pluck("shrink") %>% 
+  EBImage::Image() %>% 
+  manual_crop(crop_y_left = 0.84,
+              crop_y_right = 0.03,
+              crop_x_low = 0.84,
+              crop_x_up = 0.01) %>% 
+  get_features_BF_for_mini() %>% 
+  ggplot(aes(x  = x, y = -y))+
+  geom_point(size = 20, color = "darkgreen", alpha = 0.6)+
+  theme_void()
+
+```
+
+### voronoi no crop (higher resolution also for screenshot)
+
+```{r}
+#| fig-width: 24.408
+#| fig-height: 17.976
+
+individual_filpath_C08_221207_BF %>%  
+  get_intermediate_images(.,
+    crop_percentage = my_crop_percentage,
+    my_isoblur = my_isoblur,
+    my_k = my_k, 
+    my_ws = my_ws,
+    my_clean = my_clean,
+    my_grow = my_grow, 
+    my_shrink = my_shrink)
+  pluck("shrink") %>% 
+  get_features_BF_for_mini() %>% 
+  do_tesselation(well_name = "C08", 
+                 boundary_box = c(0, pixset_dims %>% nth(1), 
+                                0, pixset_dims %>%  nth(2))) %>% 
+  prepare_colors(input_image = "BF") %>% 
+  cook_plot_new(boundary_rectangle = c(0, pixset_dims %>% nth(1), 
+                                -(pixset_dims %>%  nth(2)) , 0),
+                print_well_label = FALSE,
+                color_me_white = TRUE,
+                color_non_white = 8,
+                my_max_radius = 1000,
+                my_linewidth = 3,
+                plot_points = FALSE) 
+  
+
+```
+
+### colored image for no crop and screnshot
+
+```{r}
+#| fig-width: 24.408
+#| fig-height: 17.976
+
+individual_filpath_C08_221207_BF %>%  
+  get_intermediate_images(.,
+    crop_percentage = my_crop_percentage,
+    my_isoblur = my_isoblur,
+    my_k = my_k, 
+    my_ws = my_ws,
+    my_clean = my_clean,
+    my_grow = my_grow, 
+    my_shrink = my_shrink)
+  pluck("shrink") %>% 
+  get_features_BF_for_mini() %>% 
+  do_tesselation(well_name = "C08", 
+                 boundary_box = c(0, pixset_dims %>% nth(1), 
+                                0, pixset_dims %>%  nth(2))) %>% 
+  prepare_colors(input_image = "BF") %>% 
+  cook_plot_new(boundary_rectangle = c(0, pixset_dims %>% nth(1), 
+                                -(pixset_dims %>%  nth(2)) , 0),
+                print_well_label = FALSE,
+                color_me_white = FALSE,
+                color_non_white = 8,
+                my_max_radius = 1000,
+                my_linewidth = 0.1,
+                plot_points = FALSE,
+                with_legend = TRUE) 
+  
+
+```
