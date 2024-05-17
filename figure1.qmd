@@ -5,7 +5,7 @@ format: html
 editor: visual
 ---
 
-## Figure 1 - C2C12 C08 
+## Figure 1 - C2C12 C08
 
 ### functions and libraries
 
@@ -139,8 +139,3 @@ my_shrink <- 4
               crop_x_up = 0.01) %>% plot)
   
 ```
-
-
-
-
-

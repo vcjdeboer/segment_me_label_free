@@ -1,0 +1,299 @@
+---
+title: "figure_4 code THP1"
+author: "vb"
+format: html
+editor: visual
+---
+
+## nuclei vs estimated cell number
+
+### functions and library
+
+```{r}
+
+#libraries
+library(tidyverse)
+library(future)
+library(here)
+
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+#sources
+source("R/cropping.R")
+source("R/get_nuclei.R")
+source("R/get_features.R")
+source("R/get_tesselation.R")
+source("R/iterating.R")
+
+
+```
+
+## THP1
+
+### THP1 Prepare filepaths brightfield
+
+```{r}
+
+# manual folder labeling
+my_root_folder <- 
+  "/Users/vincentdeboer/Documents/R"
+my_project_folder <- 
+  "segment_me_label_free"
+my_data_folder <- "data"
+
+# generate file list for THP1 BF images
+wellnames_96_withoutzero <- 
+  expand.grid(row = LETTERS[1:8], 
+              col = c(1:12)) %>% 
+    mutate(well = paste0(row,  col)) %>% 
+           pull(well)
+
+#first make a vector with filenames
+THP1_1116_files <- 
+  paste0("20231116_1300_mm_", 
+         wellnames_96_withoutzero, 
+         "_EXP1_BF.tif")
+
+#make the pathnames
+THP1_1116_pathnames <- 
+  THP1_1116_files %>% 
+      as_tibble() %>% 
+  rename(filename = value) %>% 
+  mutate(well = substring(filename, 18,20)) %>% 
+  mutate(folder = my_data_folder) %>% 
+  mutate(path_name = 
+           here::here(my_root_folder, 
+                      my_project_folder,
+                      my_data_folder, 
+                      "20231116_1300_mm_THP1",
+                      filename))
+
+
+
+```
+
+### THP1 Prepare filepaths Hoechst nuclei staining
+
+```{r}
+
+THP1_1116_files_DAPI <- 
+  paste0("20231116_1300_mm_", 
+         wellnames_96_withoutzero, 
+         "_EXP1_DAPI.tif")
+
+THP1_1116_pathnames_DAPI <- 
+  THP1_1116_files_DAPI %>% 
+  as_tibble() %>% 
+  rename(filename = value) %>% 
+  mutate(well = substring(filename, 18,20)) %>% 
+  mutate(folder = my_data_folder) %>% 
+  mutate(path_name = 
+           here::here(my_root_folder, 
+                      my_project_folder,
+                      my_data_folder, 
+                      "20231116_1300_mm_THP1",
+                      filename))
+
+future::plan(future::multisession, workers = 10)
+
+
+```
+
+### THP1 nuclei counts
+
+```{r}
+
+features_THP1_1116_DAPI_pipe <- THP1_1116_pathnames_DAPI %>% 
+    furrr::future_map2(.x = .$path_name,
+               .y = .$filename,
+               .f = ~ .x %>% 
+                 EBImage::readImage() %>%
+                 percentage_crop() %>% 
+                 get_nuclei_fancy_2(.y, 
+                                    ws_tol = 0.1,
+                                    my_clean = 2) %>% 
+                 get_nuclei_features_fancy_from_github(., .x,.y),
+               .options = furrr::furrr_options(seed = NULL)) %>%
+    list_rbind()
+
+
+n_cells_THP1_1116 <- features_THP1_1116_DAPI_pipe %>% 
+  summarize(n = n(), .by = c("file"))
+
+n_cells_THP1_1116
+n_cells_1116
+                          
+```
+
+### THP1 set parameters for iteration in pmap
+
+```{r}
+
+#get image dimensions
+my_crop_percentage = 0.05
+
+pixset_dims <- THP1_1116_pathnames$path_name %>% 
+  pluck(1) %>% 
+  EBImage::readImage() %>%
+  percentage_crop(crop_percentage = 
+                    my_crop_percentage) %>% 
+  dim()
+
+cell_size_target <- 115.73 #pixels
+
+#define parameter set
+my_isoblur <- c(0,1)
+my_grow <- c(0,1,2)
+my_shrink <- c(3,4,5,6)
+my_k <- c(0.1) #for thp1 and c2c12 no 0.01
+my_ws <- c(39, 99, 201)
+my_clean <- c(0, 1, 2)
+
+param_set <- expand_grid(
+          path_name = 
+            THP1_1116_pathnames$path_name,
+          my_isoblur,
+          my_grow,
+          my_shrink,
+          my_k,
+          my_ws,
+          my_clean)
+
+total_iterations <- nrow(param_set)
+
+paste0("number of iterations: ", total_iterations ,". Around ", total_iterations/400, " minutes to run")
+
+future::plan(future::multisession, workers = 10)
+
+```
+
+### THP1 Run iteration function
+
+
+```{r}
+
+params_results_thp1 <- readRDS(file = here::here(
+          "data", "r_objects", 
+          paste0("params_results_thp1", ".rds")))
+
+```
+
+::: {.callout-warnign}
+Note that the below iteration runs in 50 minutes on a Apple M2-pro. This can take longer on other configurations
+:::
+
+```{r}
+
+# params_results_thp1 <- 
+#   list(file_name = param_set$path_name, 
+#        .i = param_set$my_isoblur,
+#        .j = param_set$my_grow,
+#        .k = param_set$my_shrink,
+#        .l = param_set$my_k,
+#        .m = param_set$my_ws,
+#        .n = param_set$my_clean) %>% 
+#   furrr::future_pmap(
+#     .l = .,
+#     .f = function(file_name, .i, .j, .k, .l, .m, .n) 
+#       file_name %>%
+#       my_loop_function(well_name = basename(.),
+#                        i = .i, j = .j, k = .k, l = .l, m = .m, n = .n,
+#                        crop_percentage = my_crop_percentage), 
+#     .options = furrr::furrr_options(seed = NULL)) %>%
+#     list_rbind() 
+
+
+
+```
+
+
+### THP1 image and plate annotation
+
+```{r}
+plate_id <- "thp1_1116"
+groups_generated_thp1_1116 <-
+  tibble(
+    well =
+      expand.grid(row = LETTERS[1:8], col = c(1:12)) %>%
+        mutate(well = case_when(
+          nchar(col) == 1 ~ paste0(row, "0", col),
+          TRUE ~ paste0(row, col))) %>%
+        pull(well),
+    group = rep(LETTERS[1:6], each = 16),
+    plate_id = plate_id) %>%
+  mutate(group = case_when(
+    well %in% c("A01", "A12", "H01", "H12") ~ "Background",
+    TRUE ~ group)) %>%
+  mutate(group = 
+    case_when(group == "A" ~ "100000 cells/well",
+              group == "B" ~ "75000 cells/well",
+              group == "C" ~ "50000 cells/well",
+              group == "D" ~ "25000 cells/well",
+              group == "E" ~ "10000 cells/well",
+              group == "F" ~ "5000 cells/well",
+              .default = group))
+```
+
+### THP1 annotate the results
+
+```{r}
+params_results_thp1_annotated <- 
+  params_results_thp1 %>% 
+    mutate(well = str_sub(file_name, 18, 20)) %>%
+    mutate(well = case_when(
+      str_detect(well, "_") ~ paste0(
+        str_sub(well, 1, 1), "0",
+        str_sub(well, 2, 2)),
+      .default = well)) %>%
+    mutate(id = str_sub(file_name, 1, -8)) %>% 
+  left_join(n_cells_THP1_1116 %>%
+      mutate(id = str_sub(file, 1, -10)), by = c("id")) %>%
+  left_join(groups_generated_thp1_1116, by = c("well")) %>% 
+  mutate(cell_number_group = parse_number(group, na = c("Background"))) %>% 
+  mutate(cell_number_group = case_when(is.na(cell_number_group) ~ 0,
+                                       .default = cell_number_group)) %>% 
+  mutate(cell_size_xpol = case_when(cell_number_group == 5000 ~ 201,
+                                    cell_number_group == 10000 ~ 191,
+                                    cell_number_group == 25000 ~ 161,
+                                    cell_number_group == 50000 ~ 115,
+                                    cell_number_group == 75000 ~ 90, #90
+                                    cell_number_group == 100000 ~ 80, #80
+                                    .default = 115
+                                    )) %>% 
+    rename(nuclei = n)
+
+
+# please note that for each cell density the cell size
+# was estimated using the shiny app on single images
+
+
+
+```
+
+### THP1 summarize the results
+
+```{r}
+
+summarized_thp1 <- params_results_thp1_annotated %>% 
+    #slice_head(n = 1, by = c(my_mean_G2, my_seed_max_area)) %>% 
+   mutate(distance_mean = (my_mean_G3-cell_size_xpol)) %>% 
+    #mutate(distance_max = (my_seed_max_area-cell_size_target)) %>% 
+  filter(my_seed_max_area< cell_size_target) %>% 
+  slice_max(order_by = -abs(distance_mean), n = 20, by = file ) %>%
+  #filter out the background wells and wells with imaging artifacts
+  filter( !well %in% c("A01", "A02", "A12", "H01", "H12",
+                  "A08", "B08", "B12", "E10", "E11", "E12",
+                  "F11", "F12", "H11")) %>%
+    summarize(mean_G3 = mean(my_mean_G3),
+              mean_G2 = mean(my_mean_G2),
+              mean_noG = mean(my_mean_noG),
+              n = mean(my_number_of_seeds),
+              nuclei = mean(nuclei),
+              .by = file)
+
+```
+
+

@@ -1,0 +1,139 @@
+---
+title: "preparations"
+author: "vb"
+format: html
+editor: visual
+---
+
+
+## themes & libraries
+
+```{r}
+
+install.packages("BiocManager")
+
+BiocManager::install("EBImage")
+
+install.packages(c("imager", "imagerExtra", "magick"))
+
+install.packages(c("spatstat", "deldir", "ggforce", "mclust", "dbscan"))
+
+install.packages(c("pipeR", "tidyverse"))
+
+install.packages(c("furrr", "future"))
+
+install.packages(c("rmarkdown"))
+
+install.packages(c("tidyverse"))
+
+install.packages("fs")
+
+install.packages("here")
+
+#install.packages("inborutils")
+
+install.packages("devtools")
+devtools::install_github("inbo/inborutils")
+
+
+```
+
+
+```{r}
+
+theme_BF <- function(){
+  theme_bw(base_size = 18) %+replace% 
+      theme(#panel.grid.minor.x = element_blank(),
+              panel.grid.major.x = element_blank(),
+              #panel.grid.minor.y = element_blank(),
+              panel.grid.major.y = element_blank(),
+              panel.border = element_blank(),
+              axis.ticks.x = element_line(),
+              axis.ticks.y = element_line(),
+              axis.line.y = element_line(),
+              axis.line.x = element_line(),
+              plot.title = element_text(size = rel(0.9)),
+              plot.subtitle = element_text(size = rel(0.85)),
+              legend.text = element_text(size = rel(0.7)),
+              legend.title = element_text(size = rel(0.7)))}
+
+theme_BF_larger <- function(){
+  theme_bw(base_size = 50) %+replace% 
+      theme(#panel.grid.minor.x = element_blank(),
+              panel.grid.major.x = element_blank(),
+              #panel.grid.minor.y = element_blank(),
+              panel.grid.major.y = element_blank(),
+              panel.border = element_blank(),
+              axis.ticks.x = element_line(),
+              axis.ticks.y = element_line(),
+              axis.line.y = element_line(),
+              axis.line.x = element_line(),
+              plot.title = element_text(size = rel(0.9)),
+              plot.subtitle = element_text(size = rel(0.85)),
+              legend.text = element_text(size = rel(0.7)),
+              legend.title = element_text(size = rel(0.7)))}
+
+
+theme_maxTick <- function(){
+    theme_classic(base_size = 18) %+replace% 
+      theme(panel.grid.minor.x = element_blank(),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor.y = element_blank(),
+            panel.grid.major.y = element_blank(),
+            panel.border = element_blank(),
+            axis.ticks.x = element_line(),
+            axis.ticks.y = element_line(),
+            axis.line.y = element_line(),
+            legend.text = element_text(size = rel(0.7)),
+            legend.title = element_text(size = rel(0.7)),
+            axis.title.x = element_text(size = rel(0.8)),
+            axis.title.y = element_text(size = rel(0.8), angle = 90)
+      )
+  }
+```
+
+```{r}
+
+#libraries
+library(tidyverse)
+library(fs)
+library(inborutils)
+
+
+```
+
+
+### download images
+
+```{r}
+
+#create data directory in top project directory
+my_root_folder <- 
+  "/Users/vincentdeboer/Documents/R"
+my_project_folder <- 
+  "segment_me_label_free"
+my_data_folder <- "data"
+
+fs::dir_create(here::here(my_data_folder))
+
+#download all C2C12 and THP1 images from zenodo
+inborutils::download_zenodo("10.5281/zenodo.11191023", 
+                            my_data_folder)
+
+# unzip c2c12
+unzip(zipfile = 
+        here::here(my_data_folder, 
+                   "20221207_1700_gt_C2C12.zip"),
+      exdir = here::here(my_data_folder, 
+                         "20221207_1700_gt_C2C12"))
+
+# unzip THP1
+unzip(zipfile = 
+        here::here(my_data_folder, 
+                   "20231116_1300_mm_THP1.zip"),
+      exdir = here::here(my_data_folder, 
+                         "20231116_1300_mm_THP1"))
+
+```
+
+

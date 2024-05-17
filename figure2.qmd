@@ -5,7 +5,6 @@ format: html
 editor: visual
 ---
 
-
 ## Figure 2 - seeds and voronois
 
 ### functions and library

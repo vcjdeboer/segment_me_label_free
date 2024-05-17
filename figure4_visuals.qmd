@@ -5,7 +5,6 @@ format: html
 editor: visual
 ---
 
-
 ## nuclei vs estimated cell number
 
 ### functions and library
@@ -82,11 +81,11 @@ summarized_thp1 %>%
 #| fig-width: 12
 #| fig-height: 12
 
-rho_thp1 <- cor.test(x=summarized_c2c12$nuclei, 
+rho_c2c12 <- cor.test(x=summarized_c2c12$nuclei, 
          y=summarized_c2c12$n, method = 'spearman') %>%  
   pluck("estimate") %>% unname()
 
-label_rho <- paste0("R = ", round(rho_thp1, 3), ", p < 0.001")
+label_rho <- paste0("R = ", round(rho_c2c12, 3), ", p < 0.001")
 
 summarized_c2c12 %>% 
     ggplot(aes(x = nuclei, y = n))+
