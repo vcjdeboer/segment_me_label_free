@@ -1,0 +1,272 @@
+---
+title: "figure_4 code a549"
+author: "vb"
+format: html
+editor: visual
+---
+
+## nuclei vs estimated cell number
+
+### functions and library
+
+```{r}
+
+#libraries
+library(tidyverse)
+library(future)
+library(here)
+
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(jsonlite)
+
+#sources
+source("R/cropping.R")
+source("R/get_nuclei.R")
+source("R/get_features.R")
+source("R/get_tesselation.R")
+source("R/iterating.R")
+
+
+```
+
+## A549
+
+### get nuclei counts from json
+
+```{r}
+
+#a549 json file
+
+# manual folder labeling
+my_root_folder <- 
+  "/Users/vincentdeboer/Documents/R"
+my_project_folder <- 
+  "segment_me_label_free"
+my_data_folder <- "data"
+
+json_file_path2 <- here::here(my_root_folder,
+                          my_project_folder,
+                          my_data_folder,
+                          "A549_counts.json")
+
+a549_counts <- jsonlite::fromJSON(json_file_path2) 
+
+
+nuclei_a549 <- a549_counts %>% 
+  unlist() %>% 
+  as.data.frame %>% 
+  tibble::rownames_to_column() %>% 
+  rename(nuclei_count = '.') %>% 
+  arrange(rowname) %>% 
+  mutate(flagged_well = case_when(nuclei_count == "99999" ~ TRUE,
+                                 .default = FALSE)) %>% 
+  mutate(nuclei_count = case_when(flagged_well == TRUE ~ NA,
+                                  .default = nuclei_count)) %>% 
+  mutate(well = str_split(rowname, fixed("_"), 
+                           simplify = TRUE)[,1] %>% substr(1,2)) %>% 
+  mutate(date = str_split(rowname, fixed("_"), 
+                           simplify = TRUE)[,2]) %>% 
+  mutate(time = str_split(rowname, fixed("_"), 
+                           simplify = TRUE)[,3] %>% substr(1,4)) %>% 
+  mutate(timepoint = row_number(), .by = well) %>% 
+  mutate(group = case_when(well %in% c( "B6", "C6", "D6") ~ "0.5k",
+                           well %in% c( "B5", "C5", "D5") ~ "1k",
+                            well %in% c( "B4", "C4", "D4") ~ "2k",
+                            well %in% c( "B3", "C3", "D3") ~ "4k",
+                            well %in% c( "B2", "C2", "D2") ~ "8k",
+                           .default = NA)) 
+
+
+
+```
+
+
+### Make the path lists
+
+```{r}
+selected_a549 <- nuclei_a549 %>% 
+  filter(timepoint %in% c(7, 13))
+
+
+path_names_A549 <- selected_a549 %>% 
+  pull(rowname) %>% 
+  as_tibble() %>% 
+    rename(filename = value) %>% 
+    mutate(well = substring(filename, 1,2)) %>% 
+    mutate(folder = case_when(substring(well, 2,2) == "2" ~ "8k",
+                              substring(well, 2,2) == "3" ~ "4k",
+                              substring(well, 2,2) == "4" ~ "2k",
+                              substring(well, 2,2) == "5" ~ "1k",
+                              substring(well, 2,2) == "6" ~ "0.5k",
+                              .default = "nok")) %>% 
+    mutate(path_name = 
+      paste0("/Users/vincentdeboer/LIVECell_dataset_2021/nuclear_count_benchmark/A549/",
+                 folder, "/", filename))
+
+
+
+```
+
+### set parameters
+
+```{r}
+
+path_name <- path_names_A549$path_name %>% pluck(1)
+
+my_crop_percentage = 0
+
+pixset_dims <- path_name %>% 
+  EBImage::readImage() %>%
+  percentage_crop(crop_percentage = my_crop_percentage) %>% 
+  dim()
+
+my_isoblur <- c(0,1,2)
+my_grow <- c(0,1,2)
+my_shrink <- c(3,4,5,6,7)
+my_k <- c(0.1, 0.01)
+my_ws <- c(39, 99, 201)
+my_clean <- c(0, 1, 2)
+
+param_set <- expand_grid(path_name = path_names_a172$path_name,
+                #path_name = path_name,
+                         my_isoblur,
+            my_grow,
+            my_shrink,
+            my_k,
+            my_ws,
+            my_clean)
+
+total_iterations <- nrow(param_set)
+
+paste0("number of iterations: ", 
+       total_iterations ,
+       ". Around ", 
+       total_iterations/400, " minutes to run")
+
+
+#future::plan(future::multisession, workers = 10)
+
+```
+
+### A549 Run iteration function
+
+```{r}
+
+params_results_a549 <- readRDS(file = here::here(
+          "data", "r_objects", 
+          paste0("params_results_a549", ".rds")))
+
+```
+
+::: callout-warnign
+Note that the below iteration runs in 50 minutes on a Apple M2-pro. This can take longer on other configurations
+:::
+
+```{r}
+
+# params_results_a549 <- 
+#   list(file_name = param_set$path_name, 
+#        .i = param_set$my_isoblur,
+#        .j = param_set$my_grow,
+#        .k = param_set$my_shrink,
+#        .l = param_set$my_k,
+#        .m = param_set$my_ws,
+#        .n = param_set$my_clean) %>% 
+#   furrr::future_pmap(
+#     .l = .,
+#     .f = function(file_name, .i, .j, .k, .l, .m, .n) 
+#       file_name %>%
+#       my_loop_function(well_name = basename(.),
+#                        i = .i, j = .j, k = .k, l = .l, m = .m, n = .n,
+#                        crop_percentage = my_crop_percentage), 
+#     .options = furrr::furrr_options(seed = NULL)) %>%
+#     list_rbind() 
+
+```
+
+### annotate the results (24h)
+
+```{r}
+params_results_a549_annotated <- 
+  params_results_a549 %>% 
+  mutate(well = str_sub(file_name, 1, 2)) %>% 
+  left_join(nuclei_a549 %>% select(-well) %>% 
+              rename(file_name = rowname),  by = c("file_name")) %>% 
+  mutate(cell_size_xpol = case_when(group == "8k" ~ 700,
+                                    group == "4k" ~ 1000,
+                                    group == "2k" ~ 1200,
+                                    group == "1k" ~ 1200,
+                                    group == "0.5k" ~ 1200,
+                                    .default = 115
+                                    )) 
+```
+
+### summarize the results (24h)
+
+```{r}
+
+summarized_a549<- params_results_a549_annotated %>% 
+    #slice_head(n = 1, by = c(my_mean_G3, my_seed_max_area)) %>% 
+   mutate(distance_mean = (my_mean_G3-cell_size_xpol)) %>% 
+    #mutate(distance_max = (my_seed_max_area-cell_size_target)) %>% 
+  filter(my_seed_max_area< cell_size_target) %>% 
+  slice_max(order_by = -abs(distance_mean), n = 20, by = file_name ) %>% 
+    summarize(mean_G3 = mean(my_mean_G3),
+              mean_G2 = mean(my_mean_G2),
+              mean_noG = mean(my_mean_noG),
+              n = mean(my_number_of_seeds),
+              group = max(group),
+              timepoint = max(timepoint),
+              nuclei = mean(as.numeric(nuclei_count)),
+              .by = file_name)
+
+
+```
+
+
+### annotate the results (48h)
+
+```{r}
+
+params_results_a549_annotated_13 <- 
+  params_results_a549 %>% 
+  mutate(well = str_sub(file_name, 1, 2)) %>% 
+  left_join(nuclei_a549 %>% select(-well) %>% 
+              rename(file_name = rowname),  by = c("file_name")) %>% 
+  mutate(cell_size_xpol = case_when(group == "8k" ~ 380,
+                                    group == "4k" ~ 500,
+                                    group == "2k" ~ 900,
+                                    group == "1k" ~ 900,
+                                    group == "0.5k" ~ 900,
+                                    .default = 115
+                                    )) 
+
+# clust1 cells at 48h (timepoint = 13) are smaller than at 24h
+
+```
+
+
+### summarize the results (48h)
+
+```{r}
+summarized_a549_13<- params_results_a549_annotated_13 %>% 
+    #slice_head(n = 1, by = c(my_mean_G3, my_seed_max_area)) %>% 
+   mutate(distance_mean = (my_mean_G3-cell_size_xpol)) %>% 
+    #mutate(distance_max = (my_seed_max_area-cell_size_target)) %>% 
+  filter(my_seed_max_area< cell_size_target) %>% 
+  slice_max(order_by = -abs(distance_mean), n = 20, by = file_name ) %>% 
+    summarize(mean_G3 = mean(my_mean_G3),
+              mean_G2 = mean(my_mean_G2),
+              mean_noG = mean(my_mean_noG),
+              n = mean(my_number_of_seeds),
+              group = max(group),
+              timepoint = max(timepoint),
+              nuclei = mean(as.numeric(nuclei_count)),
+              .by = file_name)
+
+
+```

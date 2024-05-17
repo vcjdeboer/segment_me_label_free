@@ -164,14 +164,16 @@ param_set <- expand_grid(
 
 total_iterations <- nrow(param_set)
 
-paste0("number of iterations: ", total_iterations ,". Around ", total_iterations/400, " minutes to run")
+paste0("number of iterations: ", 
+       total_iterations ,
+       ". Around ", 
+       total_iterations/400, " minutes to run")
 
 future::plan(future::multisession, workers = 10)
 
 ```
 
 ### THP1 Run iteration function
-
 
 ```{r}
 
@@ -181,7 +183,7 @@ params_results_thp1 <- readRDS(file = here::here(
 
 ```
 
-::: {.callout-warnign}
+::: callout-warnign
 Note that the below iteration runs in 50 minutes on a Apple M2-pro. This can take longer on other configurations
 :::
 
@@ -208,7 +210,6 @@ Note that the below iteration runs in 50 minutes on a Apple M2-pro. This can tak
 
 
 ```
-
 
 ### THP1 image and plate annotation
 
@@ -295,5 +296,3 @@ summarized_thp1 <- params_results_thp1_annotated %>%
               .by = file)
 
 ```
-
-
