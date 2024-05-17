@@ -118,7 +118,7 @@ get_features_BF_for_mini <- function(image_seed){
   return(features)
 }
 
-get_nuclei_features_fancy <- function(image_seed, filepath, wellname){
+get_nuclei_features_fancy_from_github <- function(image_seed, filepath, wellname){
   #image_seed <- img_seed_test
   image_seed <- image_seed %>% purrr::pluck(1) 
   
