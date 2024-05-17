@@ -384,3 +384,114 @@ get_nuclei_features_fancy <- function(image_seed, wellname){
   return(features)
   
 }
+
+get_nuclei_fancy_2 <- function(img, filepath, 
+                               brush_size = 21,
+                               brush_type = "disc",
+                               ws_tol = 0.1,
+                               my_sigma = 0.9,
+                               my_SPE = 10,
+                               sharpen_multiplier =  3,
+                               my_clean = 1){
+  
+  disc = EBImage::makeBrush(brush_size, brush_type) #21
+  disc = disc / sum(disc)
+  
+  #EBImage::colorMode(img) <- EBImage::Grayscale
+  
+  number_of_dimensions <- length(dim(img))
+  
+  if(number_of_dimensions == 4){
+    
+    #unsharp masking from:
+    #https://bioimagebook.github.io/chapters/2-processing/4-filters/filters.html#chap-filters
+    im_diff <- (img[,,1,1] - EBImage::filter2(img[,,1,1], disc)) 
+    
+    intermed <-  (img[,,1,1] + sharpen_multiplier*im_diff) %>% 
+      EBImage::normalize() %>% 
+      magick::image_read() %>% 
+      imager::magick2cimg() %>%  
+      isoblur(.,my_sigma) %>% 
+      imagerExtra::EqualizeADP() %>% 
+      imagerExtra::SPE(my_SPE)
+    
+    intermed_2 <- intermed %>% 
+      imagerExtra::ThresholdML(k = 3)
+    
+    intermed_2[intermed_2<1.1] <- 0
+    
+    image_seed <- intermed_2 %>%
+      clean(my_clean) %>%  
+      EBImage::Image() %>% 
+      EBImage::fillHull() %>% 
+      EBImage::distmap() %>% 
+      EBImage::watershed(tolerance = ws_tol, 
+                         ext = 1 )
+    
+    image_seed_returned <- list(image_seed[,,1,1])
+    
+  }
+  
+  if(number_of_dimensions == 3){
+    
+    im_diff <- (img[,,3] - EBImage::filter2(img[,,3], disc))
+    
+    intermed <-  (img[,,3] + sharpen_multiplier*im_diff) %>% 
+      EBImage::normalize() %>% 
+      magick::image_read() %>% 
+      imager::magick2cimg() %>%  
+      isoblur(.,my_sigma) %>% 
+      imagerExtra::EqualizeADP() %>% 
+      imagerExtra::SPE(my_SPE)
+    
+    intermed_2 <- intermed %>% 
+      imagerExtra::ThresholdML(k = 3)
+    
+    intermed_2[intermed_2<1.1] <- 0
+    
+    image_seed <- intermed_2 %>%
+      clean(my_clean) %>%  
+      EBImage::Image() %>% 
+      EBImage::fillHull() %>% 
+      EBImage::distmap() %>% 
+      EBImage::watershed(tolerance = ws_tol, 
+                         ext = 1 )
+    
+    image_seed_returned <- list(image_seed[,,1,1])
+    
+  }
+  
+  if(number_of_dimensions == 2){
+    
+    
+    im_diff <- (img - EBImage::filter2(img, disc))
+    
+    intermed <-  (img + sharpen_multiplier*im_diff) %>% 
+      EBImage::normalize() %>% 
+      magick::image_read() %>% 
+      imager::magick2cimg() %>%  
+      isoblur(.,my_sigma) %>% 
+      imagerExtra::EqualizeADP() %>% 
+      imagerExtra::SPE(my_SPE)
+    
+    intermed_2 <- intermed %>% 
+      imagerExtra::ThresholdML(k = 3)
+    
+    intermed_2[intermed_2<1.1] <- 0
+    
+    image_seed <- intermed_2 %>%
+      clean(my_clean) %>%  
+      EBImage::Image() %>% 
+      EBImage::fillHull() %>% 
+      EBImage::distmap() %>% 
+      EBImage::watershed(tolerance = ws_tol, 
+                         ext = 1 )
+    
+    image_seed_returned <- list(image_seed[,,1,1])
+    
+  }
+  
+  return(image_seed_returned)
+  
+  
+}

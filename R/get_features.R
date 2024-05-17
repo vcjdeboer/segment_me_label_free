@@ -117,3 +117,69 @@ get_features_BF_for_mini <- function(image_seed){
   
   return(features)
 }
+
+get_nuclei_features_fancy <- function(image_seed, filepath, wellname){
+  #image_seed <- img_seed_test
+  image_seed <- image_seed %>% purrr::pluck(1) 
+  
+  #filepath was burned into the attributes of the image, but could also have been used as argument
+  
+  #get the features using the seed image
+  FS_moment <- as_tibble(EBImage::computeFeatures.moment(image_seed))
+  FS_shape <- as_tibble(EBImage::computeFeatures.shape(image_seed))
+  features <- cbind(FS_moment, FS_shape) 
+  
+  #if images do not have features, thus are empty (like background images)
+  #generate a table with only one object, else the output df cannot be generated
+  if("m.cx" %in% colnames(features)){
+    features <- features %>% 
+      dplyr::rename(x = m.cx,
+                    y = m.cy)
+    
+    #filepath <- attr(image_seed, "original_filepath")
+    features <- features %>% 
+      dplyr::mutate(file = basename(filepath)) %>% 
+      dplyr::mutate(well = wellname) %>% 
+      dplyr::select(file, well, everything())
+    
+  } else {
+    #filepath <- attr(image_seed, "original_filepath")
+    features <- tibble(file = filepath,
+                       x = sample.int(400, 10, replace = FALSE),
+                       y = sample.int(200, 10, replace = FALSE))
+    attributes(features)$empty_image <- TRUE
+    
+    #filepath <- attr(image_seed, "original_filepath")
+    features <- features %>% 
+      dplyr::mutate(file = basename(filepath)) %>% 
+      dplyr::mutate(well = wellname) %>% 
+      dplyr::select(file, well, everything())
+    
+    
+  }
+  
+  if(nrow(features) < 10){
+    #filepath <- attr(image_seed, "original_filepath")
+    features <- tibble(file = filepath,
+                       x = sample.int(400, 10, replace = FALSE),
+                       y = sample.int(200, 10, replace = FALSE))
+    attributes(features)$empty_image <- TRUE
+    
+    #filepath <- attr(image_seed, "original_filepath")
+    features <- features %>% 
+      dplyr::mutate(file = basename(filepath)) %>% 
+      dplyr::mutate(well = wellname) %>% 
+      dplyr::select(file, well, everything())
+    
+    
+  }
+  
+  # #return the file and x,y
+  # filepath <- attr(image_seed, "original_filepath")
+  # features <- features %>% 
+  #   dplyr::mutate(file = basename(filepath)) %>% 
+  #   dplyr::select(file, x,y)
+  
+  return(features)
+  
+}
