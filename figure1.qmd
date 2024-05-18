@@ -139,3 +139,33 @@ my_shrink <- 4
               crop_x_up = 0.01) %>% plot)
   
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+\$.GlobalEnv \[1\] "manual_crop" "percentage_crop"
+
+\$`character(0)` \[1\] "get_intermediate_images" "list.functions.in.file"
+
+\$`package:base` \[1\] "c" "library" "list" "names" "return"
+
+\$`package:EBImage` \[1\] "Image" "readImage"
+
+\$`package:here` \[1\] "here"
+
+\$`package:imager` \[1\] "as.pixset" "clean" "enorm" "grayscale" "grow"\
+\[6\] "imgradient" "isoblur" "magick2cimg" "shrink"
+
+\$`package:imagerExtra` \[1\] "ThresholdAdaptive"
+
+\$`package:magick` \[1\] "image_read"
+
+\$`package:purrr` \[1\] "keep" "map"

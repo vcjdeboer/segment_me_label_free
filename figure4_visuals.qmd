@@ -276,3 +276,29 @@ summarized_a549_13 %>%
       theme(aspect.ratio = 1)
 
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+\$.GlobalEnv \[1\] "theme_BF_larger"
+
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
+
+\$`package:base` \[1\] "c" "library" "paste0" "round" "unname"
+
+\$`package:ggplot2` \[1\] "aes" "annotate" "geom_abline" "geom_point" "ggplot"\
+\[6\] "labs" "lims" "theme"
+
+\$`package:purrr` \[1\] "pluck"
+
+\$`package:stats` \[1\] "cor.test"
+
+\$`package:stringr` \[1\] "str_detect"

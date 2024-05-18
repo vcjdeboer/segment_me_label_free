@@ -164,3 +164,30 @@ individual_filpath_C08_221207_BF %>%
   
 
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+\$.GlobalEnv \[1\] "cook_plot_new" "do_tesselation"\
+\[3\] "get_features_BF_for_mini" "manual_crop"\
+\[5\] "prepare_colors"
+
+\$`character(0)` \[1\] "get_intermediate_images"
+
+\$`package:base` \[1\] "c" "library"
+
+\$`package:dplyr` \[1\] "nth"
+
+\$`package:EBImage` \[1\] "Image"
+
+\$`package:ggplot2` \[1\] "aes" "geom_point" "ggplot" "theme_void"
+
+\$`package:purrr` \[1\] "pluck"

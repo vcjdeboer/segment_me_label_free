@@ -196,7 +196,6 @@ tibble(classification =  model_C08 %>% pluck("classification"),
 
 ```
 
-
 ```{r}
 #| fig-width: 8.136
 #| fig-height: 5.992
@@ -309,7 +308,6 @@ my_shrink <- 4
 
 ```
 
-
 #### run
 
 ```{r}
@@ -336,3 +334,55 @@ individual_filpath_C08_221207_BF %>%
 
 
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+Show in New Window \$.GlobalEnv \[1\] "do_tesselation" "get_features_BF_for_mini" \[3\] "manual_crop" "percentage_crop"\
+\[5\] "theme_BF_larger"
+
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
+
+\$`c("package:dplyr", "package:tidyr", "package:tibble")` \[1\] "as_tibble" "tibble"
+
+\$`character(0)` \[1\] "brewer.pal" "densityMclust"\
+\[3\] "empty_theme" "geom_voronoi_segment"\
+\[5\] "geom_voronoi_tile" "get_intermediate_images"\
+\[7\] "list.functions.in.file" "scale_fill_discrete_qualitative" \[9\] "stat_slab"
+
+\$`package:base` \[1\] "as.factor" "c" "dim" "library" "names" "seq"\
+\[7\] "sweep"
+
+\$`package:dplyr` \[1\] "left_join" "mutate" "nth" "pull" "rename" "select"
+
+\$`package:EBImage` \[1\] "bwlabel" "computeFeatures.moment" "getFrame"\
+\[4\] "Image" "readImage"
+
+\$`package:ggplot2` \[1\] "aes" "annotation_raster" "coord_fixed"\
+\[4\] "geom_line" "ggplot" "labs"\
+\[7\] "scale_color_manual" "scale_linetype_manual" "scale_y_reverse"\
+\[10\] "theme_void"
+
+\$`package:grDevices` \[1\] "as.raster" "extendrange"
+
+\$`package:here` \[1\] "here"
+
+\$`package:imager` \[1\] "grayscale" "magick2cimg" "threshold"
+
+\$`package:magick` \[1\] "image_negate" "image_read"
+
+\$`package:purrr` \[1\] "keep" "map" "pluck"
+
+\$`package:spatstat.geom` \[1\] "rescale"
+
+\$`package:stats` \[1\] "predict"
+
+\$`package:tidyr` \[1\] "pivot_longer"

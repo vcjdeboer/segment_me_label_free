@@ -1,0 +1,430 @@
+---
+title: "figure_5 code"
+author: "vb"
+format: html
+editor: visual
+---
+
+## Figure 5 spatial characterization
+
+### functions and libraries
+
+```{r}
+
+#libraries
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(tidyverse)
+
+library(geomtextpath)
+
+library(spatstat)
+
+library(gt)
+
+library(dbscan)
+
+```
+
+### get xy coordinates and detail for one well
+
+```{r}
+
+#this function takes the best scoring param set 
+#and uses these parameters to get the xy coordinates
+#
+# it outputs a features tibble with xy 
+# and a plot overlay of seeds and BF image
+
+plot_raster_with_dots <- 
+  function(col, row, cell_size_target = 223){
+  my_well_with_zero <- paste0(col, "0", row)
+  my_well <- paste0(col, row)
+  
+  my_file_path <- params_results_c2c12_annotated %>% 
+    filter(str_detect(path_name, my_well)) %>%  pull(path_name) %>%  unique()
+  
+  my_mean_n <- summarized_c2c12 %>% 
+    filter(str_detect(file, my_well)) %>% pull(n)
+  
+  my_best_param_set <- params_results_c2c12_annotated %>% 
+    mutate(distance_mean = (my_mean_G3-cell_size_xpol)) %>% 
+      #mutate(distance_max = (my_seed_max_area-cell_size_target)) %>% 
+    filter(my_seed_max_area< cell_size_target) %>% 
+    slice_max(order_by = -abs(distance_mean), n = 20, by = file ) %>% 
+    filter(well == my_well_with_zero) %>% 
+    mutate(delta = abs(my_number_of_seeds - my_mean_n)) %>% 
+    arrange(delta) %>% 
+    slice(1) %>% 
+    select(1:6)
+  
+  
+    my_best_xy <- my_loop_function_small_3(
+      my_file_path, 
+      my_well,
+      i = my_best_param_set$my_isoblur ,
+      j = my_best_param_set$my_grow ,
+      k = my_best_param_set$my_shrink ,
+      l = my_best_param_set$my_k ,
+      m = my_best_param_set$my_ws ,
+      n = my_best_param_set$my_clean )
+  
+    raster <- my_file_path %>% 
+                   EBImage::readImage() %>%
+                   percentage_crop() %>%   
+                    EBImage::flip() %>% 
+                    as.raster()
+    
+    my_number_of_seeds_xy <- nrow(my_best_xy)
+    
+    my_number_of_seeds <- summarized_c2c12 %>% 
+      filter(str_detect(file, my_well)) %>%  pull(n) %>%  round()
+    
+    plot <- my_best_xy %>% 
+      ggplot(aes(x = x, y = y))+
+        annotation_raster(raster,0, 1017, 0, 749 )+
+       geom_point(size = 2, alpha = 0.8, color = "darkblue")+
+      labs(subtitle = paste0(my_well, " (n = ", 
+                             my_number_of_seeds, " (mean), n = ", 
+                             my_number_of_seeds_xy, " (best))" ))
+    return(list(xy = my_best_xy, plot = plot))
+}
+
+```
+
+### set parameters
+
+```{r}
+
+my_crop_percentage <- 0.05
+
+pixset_dims <- path_names_C2C12$path_name %>% 
+  pluck(1) %>% 
+  EBImage::readImage() %>%
+  percentage_crop(crop_percentage = 
+                    my_crop_percentage) %>% 
+  dim()
+
+boundary_rectangle <- c(0, pixset_dims %>%  nth(1),
+                        0, pixset_dims %>% nth(2))
+
+
+```
+
+### Get the optimal parameter set for cell density 500 cells/well (xy coordinates)
+
+```{r}
+
+# get all wells from column 3 and 4
+# that is: with a density of  500 cells/well
+all_500_c2c12 <- path_names_C2C12 %>%
+  filter(str_detect(well, c("3|4"))) %>%
+  pull(well) %>%
+  purrr::map(~ .x %>%
+    str_sub(1, 2) %>%
+    plot_raster_with_dots(
+      col = str_sub(., 1, 1),
+      row = str_sub(., 2, 2)) %>%
+    pluck("xy"))
+
+```
+
+### do the mclust on the xy coordinates
+
+```{r}
+# do mclust on all 16
+all_500_c2c12_mclust <- all_500_c2c12 %>%
+  purrr::map(~ .x %>%
+    select(x, y, file) %>%
+    do_tesselation(well_name = .$file, 
+                   boundary_box = c(
+                      0, pixset_dims %>% nth(1),
+                      0, pixset_dims %>% nth(2))) %>%
+    nest(.by = c(well)) %>%
+    mutate(
+      posteriors =
+        purrr::map(data, ~ .x %>%
+          pull(dir.area) %>%
+          mclust::densityMclust(.,
+            G = 3, modelName = "V", # g=2or3
+            plot = FALSE,
+            verbose = FALSE))) %>%
+    mutate(
+      posteriors_2 =
+        purrr::map(
+          .x = posteriors,
+          .f = ~ .x %>%
+            keep(names(.) %in% c("data", 
+                                 "classification", 
+                                 "z")) %>%
+            as.data.frame())) %>%
+    unnest(c(posteriors_2, data)) %>%
+    select(well, x, y, classification, dir.area))
+
+```
+
+### do the dbscan clustering and get summaries
+
+```{r}
+
+# do dbscan on all
+all_500_dbscan <- all_500_c2c12_mclust %>%
+  purrr::map(~ .x %>%
+    select(x, y) %>%
+    dbscan::dbscan(eps = 40, minPts = 5))
+
+all_500_well_names <- all_500_c2c12 %>%
+  purrr::map_chr(~ .x %>%
+    pull(file) %>%
+    unique())
+
+names(all_500_dbscan) <- all_500_well_names
+
+im_width <- pixset_dims %>% nth(1)
+im_height <- pixset_dims %>% nth(2)
+
+all_500_dbscan_summaries <-
+  purrr::map2(
+    .x = all_500_c2c12_mclust,
+    .y = all_500_dbscan,
+    .f = ~ .x %>%
+      mutate(cluster = .y$cluster) %>%
+      mutate(rel_dir.area = 
+               dir.area / (im_width * im_height)) %>%
+      summarize(
+        n = n(),
+        rel_sum_dir.area = 
+          round(sum(rel_dir.area) * (100), 1),
+        sum_dir.area = round(sum(dir.area)),
+        density = round(n / sum_dir.area * 10000, 1),
+        .by = cluster
+      ) %>%
+      mutate(well = .x %>% pull(well) %>% unique()) %>%
+      arrange(cluster)
+  ) %>%
+  list_rbind()
+
+# get cluster summaries
+cluster_characteristics_all_500 <- 
+  all_500_dbscan_summaries %>%
+    filter(cluster != 0) %>%
+    summarize(
+      n_clusters = n(),
+      confluency = sum(rel_sum_dir.area),
+      mean_cluster_size = mean(rel_sum_dir.area),
+      largest_cluster_size =
+        nth(rel_sum_dir.area, 1, order_by = -rel_sum_dir.area),
+      largest_cluster_size =
+        nth(rel_sum_dir.area, 1, order_by = -rel_sum_dir.area),
+      dens_in_largest_cluster =
+        nth(density, 1, order_by = -rel_sum_dir.area),
+      .by = well
+    )
+
+
+```
+
+### select 6 wells with around 500 seeds/well
+
+```{r}
+
+all_500_n_seeds <- all_500_dbscan_summaries %>% 
+    summarize(n_seeds = sum(n),
+              .by = well)
+selected_six_wells <- 
+    all_500_n_seeds %>% 
+      filter(between(n_seeds, 460, 544)) %>% pull(well)
+
+```
+
+#### prepare simulated data
+
+```{r}
+
+#spatstat window class
+window_c2c12 <- owin(c(0,pixset_dims %>%  nth(1)),
+                              c(0,pixset_dims %>%  nth(2))) 
+
+my_random_c2c12_ppp <- runifpoint(500, 
+                                  win=window_c2c12, 
+                                  giveup=1000, 
+                                  warn=TRUE,
+                                  nsim=10000, drop=TRUE, ex=NULL) 
+
+my_simul_xy <- my_random_c2c12_ppp %>%  
+  purrr::map( ~.x %>% 
+                coords()) %>% 
+  list_rbind(names_to = "simul")
+
+simulated_dir.area <- my_simul_xy %>% 
+  filter(simul == "Simulation 500") %>% 
+  do_tesselation(well_name = "simulated", boundary_box = boundary_rectangle)
+
+```
+
+#### calculate quadrat stats
+
+```{r}
+
+all_500_chi <- all_500_c2c12 %>%
+  purrr::map(~.x %>% 
+    mutate(y = -y) %>% 
+    select(x,y) %>%  
+    with(., 
+         spatstat.geom::ppp(x = x, y = y, 
+                            xrange = range(x), yrange = range(y))) %>%
+    quadrat.test(., nx = 10, ny = 7) %>% 
+      pluck("statistic") %>%  
+      unname()) %>% unlist()
+
+all_500_p <- all_500_c2c12 %>%
+  purrr::map(~.x %>% 
+    mutate(y = -y) %>% 
+    select(x,y) %>%  
+    with(., 
+         spatstat.geom::ppp(x = x, y = y, 
+                            xrange = range(x), yrange = range(y))) %>%
+    quadrat.test(., nx = 10, ny = 7) %>% 
+      pluck("p.value") %>%  
+      unname()) %>%  unlist()
+
+all_500_well_names <- all_500_c2c12 %>% 
+  purrr::map_chr(~ .x %>% 
+               pull(file) %>%  
+               unique()) 
+
+
+quadrat_characteristics_all_500 <- tibble(well = all_500_well_names,
+                                          chi = all_500_chi,
+                                          p = all_500_p) %>%  arrange(-chi)
+
+
+```
+
+#### calculate tile summaries
+
+```{r}
+mean_sd_char_six <- all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well %in% selected_six_wells) %>% 
+  summarize(mean = mean(dir.area),
+            sd = sd(dir.area),
+            cv = sd/mean*100,
+            .by = well)
+
+```
+
+
+### Calculate the within cluster density of well A03 and B03 for figure 5C
+
+```{r}
+
+my_well <-  "A3"
+density_cluster_zero <- all_500_dbscan_summaries %>% 
+              filter(well == my_well) %>% 
+  filter(cluster == 0) %>%  pull(density)
+  
+A3_dens_plot_data <- all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well == my_well) %>% 
+  mutate(cluster = all_500_dbscan %>% 
+           pluck(my_well) %>% 
+           pluck("cluster")) %>%
+  left_join(all_500_dbscan_summaries %>% 
+              filter(well == my_well) %>% 
+              select(-well) , by = c("cluster")) %>% 
+  mutate(cluster=(case_when(cluster == 0 ~ NA,
+                           .default = cluster))) %>% 
+  mutate(density = case_when(classification == 3 ~ density_cluster_zero,
+                             .default = density))
+
+my_well <-  "B3"
+density_cluster_zero <- all_500_dbscan_summaries %>% 
+              filter(well == my_well) %>% 
+  filter(cluster == 0) %>%  pull(density)
+B3_dens_plot_data_new <- all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well == my_well) %>% 
+  mutate(cluster = all_500_dbscan %>% 
+           pluck(my_well) %>% 
+           pluck("cluster")) %>%
+  left_join(all_500_dbscan_summaries %>% 
+              filter(well == my_well) %>% 
+              select(-well) , by = c("cluster")) %>% 
+  mutate(cluster=(case_when(cluster == 0 ~ NA,
+                           .default = cluster))) %>% 
+  mutate(density = case_when(classification == 3 ~ density_cluster_zero,
+                             .default = density))
+
+
+```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+Show in New Window
+$.GlobalEnv
+[1] "do_tesselation"           "my_loop_function_small_3"
+[3] "percentage_crop"          "plot_raster_with_dots"   
+
+$`c("package:dplyr", "package:stats")`
+[1] "filter"
+
+$`c("package:dplyr", "package:tidyr", "package:tibble")`
+[1] "tibble"
+
+$`character(0)`
+[1] "dbscan"        "densityMclust"
+
+$`package:base`
+ [1] "abs"           "as.data.frame" "c"             "dim"          
+ [5] "library"       "list"          "mean"          "names"        
+ [9] "nrow"          "paste0"        "range"         "return"       
+[13] "round"         "sum"           "unique"        "unlist"       
+[17] "unname"        "with"         
+
+$`package:dplyr`
+ [1] "arrange"   "between"   "case_when" "left_join" "mutate"    "n"        
+ [7] "nth"       "pull"      "select"    "slice"     "slice_max" "summarize"
+
+$`package:EBImage`
+[1] "flip"      "readImage"
+
+$`package:ggplot2`
+[1] "aes"               "annotation_raster" "geom_point"        "ggplot"           
+[5] "labs"             
+
+$`package:grDevices`
+[1] "as.raster"
+
+$`package:purrr`
+[1] "keep"       "list_rbind" "map"        "map_chr"    "map2"       "pluck"     
+
+$`package:spatstat.explore`
+[1] "quadrat.test"
+
+$`package:spatstat.geom`
+[1] "coords" "owin"   "ppp"   
+
+$`package:spatstat.random`
+[1] "runifpoint"
+
+$`package:stats`
+[1] "sd"
+
+$`package:stringr`
+[1] "str_detect" "str_sub"   
+
+$`package:tidyr`
+[1] "nest"   "unnest"

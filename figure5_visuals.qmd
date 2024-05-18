@@ -1,0 +1,383 @@
+---
+title: "figure_5"
+author: "vb"
+format: html
+editor: visual
+---
+
+## Figure 5 spatial characterization
+
+### functions and libraries
+
+```{r}
+
+#libraries
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(tidyverse)
+
+library(geomtextpath)
+
+library(spatstat)
+
+library(gt)
+
+library(colorspace)
+
+```
+
+### Fig 5A well B03 and A03 Voronois
+
+```{r}
+
+all_500_c2c12 %>% 
+  list_rbind(names_to = "iter") %>%
+  filter(file == "A3") %>% 
+  do_tesselation(well_name = .$file, 
+                boundary_box = boundary_rectangle) %>% 
+  prepare_colors() %>% 
+  cook_plot_new(boundary_rectangle = 
+                  c(0,pixset_dims %>% nth(1),
+                    -pixset_dims %>% nth(2), 0),
+                my_linewidth = 0.1,
+                with_legend = FALSE)
+
+all_500_c2c12 %>% 
+  list_rbind(names_to = "iter") %>%
+  filter(file == "B3") %>% 
+  do_tesselation(well_name = .$file, 
+                boundary_box = boundary_rectangle) %>% 
+  prepare_colors() %>% 
+  cook_plot_new(boundary_rectangle = 
+                  c(0,pixset_dims %>% nth(1),
+                    -pixset_dims %>% nth(2), 0),
+                my_linewidth = 0.1,
+                with_legend = FALSE)
+
+```
+
+### Fig 5B well A03 and B03 DBSCAN clusters
+
+```{r}
+
+my_well <- "A3"
+all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well == my_well) %>% 
+  mutate(cluster = all_500_dbscan %>% 
+           pluck(my_well) %>% 
+           pluck("cluster")) %>%
+  left_join(all_500_dbscan_summaries %>%  
+              filter(well == my_well), 
+            by = c("cluster")) %>% 
+  mutate(cluster=(case_when(cluster == 0 ~ NA,
+                           .default = cluster))) %>% 
+  mutate(cluster = case_when(classification == 3 ~ NA,
+                             .default = cluster)) %>%
+  ggplot() +
+      ggforce::geom_voronoi_tile(
+        aes(x=x,
+            y=y,
+            fill = as.factor(cluster),
+            group = -1L),
+        color = "grey",
+        linewidth = 0.3,
+        bound = c(0, pixset_dims %>% nth(1),
+                  -pixset_dims %>%  nth(2), 0),
+        normalize = FALSE) +
+      scale_y_reverse()+
+    colorspace::scale_fill_discrete_divergingx(
+      palette = "Zissou 1", 
+      rev = TRUE,
+      name = "Cluster #")+
+
+  theme_void(base_size = 25)+
+  theme(aspect.ratio = 0.74)+
+  theme(legend.position = "none") + 
+  theme(plot.margin=unit(c(-14,-10,-14,-10), "pt")) #trbl
+
+  
+my_well <- "B3"
+all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well == my_well) %>% 
+  mutate(cluster = all_500_dbscan %>% 
+           pluck(my_well) %>% 
+           pluck("cluster")) %>%
+  left_join(all_500_dbscan_summaries %>%  
+              filter(well == my_well), 
+            by = c("cluster")) %>% 
+  mutate(cluster=(case_when(cluster == 0 ~ NA,
+                           .default = cluster))) %>% 
+  mutate(cluster = case_when(classification == 3 ~ NA,
+                             .default = cluster)) %>%
+  ggplot() +
+      ggforce::geom_voronoi_tile(
+        aes(x=x,
+            y=y,
+            fill = as.factor(cluster),
+            group = -1L),
+        color = "grey",
+        linewidth = 0.3,
+        bound = c(0, pixset_dims %>% nth(1),
+                  -pixset_dims %>%  nth(2), 0),
+        normalize = FALSE) +
+      scale_y_reverse()+
+    colorspace::scale_fill_discrete_divergingx(
+      palette = "Zissou 1", 
+      rev = TRUE,
+      name = "Cluster #")+
+
+  theme_void(base_size = 25)+
+  theme(aspect.ratio = 0.74)+
+  theme(legend.position = "none") + 
+  theme(plot.margin=unit(c(-14,-10,-14,-10), "pt")) #trbl
+
+  
+
+```
+
+### Fig 5C within cluster density
+
+```{r}
+#| fig-width: 9
+#| fig-height: 10
+
+A3_dens_plot_data %>% 
+  rbind(B3_dens_plot_data_new) %>% 
+  ggplot() +
+      ggforce::geom_voronoi_tile(
+        aes(x=x,
+            y=y,
+            fill = density,
+            group = -1L),
+        color = "grey",
+        linewidth = 0.3,
+        bound = c(0, pixset_dims %>% nth(1),
+                  -pixset_dims %>%  nth(2), 0),
+        normalize = FALSE) +
+      scale_y_reverse()+
+    colorspace::scale_fill_continuous_sequential(
+      palette = "YlOrRd", rev = TRUE,
+      name = "Cell density")+
+  theme_void(25)+
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank())+
+  theme(aspect.ratio = 0.74)+
+  theme(panel.border = element_rect(color = "black", 
+                                    fill = NA, 
+                                    linewidth  = 2))+
+  facet_wrap( vars(forcats::fct_rev(well)), nrow = 2)
+
+
+```
+
+### Fig 5D tile area density plot
+
+```{r}
+#| fig-width: 10
+#| fig-height: 8
+
+all_500_c2c12 %>% 
+
+  purrr::map( ~.x %>% do_tesselation(well_name = .$file, 
+                boundary_box = boundary_rectangle)) %>% 
+  list_rbind(names_to = "iter") %>% 
+  filter(well %in% selected_six_wells) %>% 
+  filter(well %in% c("B3", "A3")) %>% 
+  ggplot()+
+    geomtextpath::geom_textdensity(data = simulated_dir.area,
+               aes(x = dir.area),
+                  color = "black",
+               linetype = "dashed", 
+               linewidth = 1.2,
+               size = 8, 
+                vjust = -0.4, label = "simulated")+
+    geomtextpath::geom_textdensity(aes(x = dir.area,
+                                       fill = (well),
+                                       label = well),
+                                   
+                 color = "black",
+                 size = 8, 
+                 vjust = -0.4,
+                 hjust = 0.37)+
+    geom_density(aes(x = dir.area,fill = well),alpha = 0.6,
+                 color = "black")+
+    labs(x = "Tile area (pixels)")+
+    lims(x = c(0,5000))+
+    colorspace::scale_fill_discrete_qualitative(palette = "cold",
+                                                name = "well")+
+    theme_classic(base_size = 36)+
+    theme(aspect.ratio = 1)+
+  theme(legend.position = "none")
+
+  # theme(
+  #   plot.margin=unit(c(-2,0,0,3), "pt") #trbl
+  # )+
+  
+
+```
+
+### Fig 5E spatstat quadrat plots
+
+```{r}
+#| fig-width: 8.136
+#| fig-height: 5.992
+
+#B3
+coords_B3 <- all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well == "B3") %>% 
+  mutate(y = -y) %>% 
+  select(x,y, classification) 
+
+my_xlim_B3 = range(coords_B3$x)
+my_ylim_B3 = range(coords_B3$y)
+
+my_ln_B3 = with(coords_B3, 
+             spatstat.geom::ppp(x = x, 
+                                y = y, 
+                                marks = classification, 
+                                xrange = my_xlim_B3, 
+                                yrange = my_ylim_B3))
+
+#A3
+coords_A3 <- all_500_c2c12_mclust %>% 
+  list_rbind() %>% 
+  filter(well == "A3") %>% 
+  mutate(y = -y) %>% 
+  select(x,y, classification) 
+
+my_xlim_A3 = range(coords_A3$x)
+my_ylim_A3 = range(coords_A3$y)
+
+my_ln_A3 = with(coords_A3, 
+             spatstat.geom::ppp(x = x, 
+                                y = y, 
+                                marks = classification, 
+                                xrange = my_xlim_A3, 
+                                yrange = my_ylim_A3))
+#count
+Q_B3 <- quadratcount(my_ln_B3, nx = 10, ny = 8)
+
+Q_A3 <- quadratcount(my_ln_A3, nx = 10, ny = 8)
+
+#plot
+plot(Q_A3, cex=1.5)
+
+plot(Q_B3, cex=1.5)
+
+
+
+```
+
+### Fig 5F summary table characteristics
+
+```{r}
+
+  #characteristics overview
+
+  n_seeds_six <- all_500_n_seeds %>% 
+    filter(well %in% selected_six_wells)
+  
+  clust_char_six <- cluster_characteristics_all_500 %>% 
+    filter(well %in% selected_six_wells)
+    
+  quadr_char_six <- quadrat_characteristics_all_500 %>% 
+    filter(well %in% selected_six_wells)
+  
+  char_overview_six <- n_seeds_six %>% 
+    left_join(clust_char_six, by = c("well")) %>% 
+    left_join(quadr_char_six, by = c("well")) %>% 
+    left_join(mean_sd_char_six, by = c("well")) %>% 
+    select(well, n_seeds, confluency, 
+           chi, p, everything()) %>% 
+    arrange(chi) 
+  
+#combined  
+  char_overview_six %>% 
+    select(well, n_seeds, confluency, chi, mean, sd, cv,
+            n_clusters, mean_cluster_size, 
+           largest_cluster_size) %>%
+    gt::gt(rowname_col = "well") %>% 
+    gt::tab_spanner(
+      label = "Tile area",
+      columns = c("mean", "sd", "cv")) %>% 
+    gt::tab_spanner(
+      label = "Quadrat",
+      columns = c("chi")) %>% 
+    gt::tab_spanner(
+      label = "DBSCAN",
+      columns = c("n_clusters", "mean_cluster_size",
+                "largest_cluster_size")) %>% 
+    gt::fmt_number(
+      columns = c(mean,sd, cv),
+      decimals = 0,
+      use_seps = FALSE) %>% 
+    gt::cols_align(align = "center") %>% 
+    gt::fmt_number(
+      columns = c(mean_cluster_size,
+                largest_cluster_size),
+      decimals = 1,
+      use_seps = FALSE) %>% 
+    gt::fmt_number(
+      columns = c(n_clusters, chi),
+      decimals = 0,
+      use_seps = FALSE) %>% 
+    gt::cols_label(n_clusters = "clusters (#)",
+            mean_cluster_size = "mean size (%)",
+            largest_cluster_size = "max size  (%)",
+            chi = "\U03C7\U00B2",#"\U03C7",
+            mean = "mean (pixels)",
+            sd = "sd (pixels)",
+            cv = "cv (%)",
+            confluency = "confluency (%)",
+            n_seeds = "seeds (#)")
+  
+```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+Show in New Window \$.GlobalEnv \[1\] "cook_plot_new" "do_tesselation" "prepare_colors"
+
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
+
+\$`c("package:graphics", "package:base")` \[1\] "plot"
+
+\$`c("package:gt", "package:dplyr", "package:ggplot2")` \[1\] "vars"
+
+\$`c("package:gt", "package:dplyr", "package:tidyr")` \[1\] "everything"
+
+\$`character(0)` \[1\] "geom_voronoi_tile" "scale_fill_continuous_sequential" \[3\] "scale_fill_discrete_divergingx" "scale_fill_discrete_qualitative"
+
+\$`package:base` \[1\] "as.factor" "c" "library" "range" "rbind" "with"
+
+\$`package:dplyr` \[1\] "arrange" "case_when" "left_join" "mutate" "nth" "select"
+
+\$`package:forcats` \[1\] "fct_rev"
+
+\$`package:geomtextpath` \[1\] "geom_textdensity"
+
+\$`package:ggplot2` \[1\] "aes" "element_blank" "element_rect" "facet_wrap"\
+\[5\] "geom_density" "ggplot" "labs" "lims"\
+\[9\] "scale_y_reverse" "theme" "theme_classic" "theme_void"\
+\[13\] "unit"
+
+\$`package:gt` \[1\] "cols_align" "cols_label" "fmt_number" "gt" "tab_spanner"
+
+\$`package:purrr` \[1\] "list_rbind" "map" "pluck"
+
+\$`package:spatstat.geom` \[1\] "ppp" "quadratcount"

@@ -84,7 +84,6 @@ nuclei_a549 <- a549_counts %>%
 
 ```
 
-
 ### Make the path lists
 
 ```{r}
@@ -227,7 +226,6 @@ summarized_a549<- params_results_a549_annotated %>%
 
 ```
 
-
 ### annotate the results (48h)
 
 ```{r}
@@ -249,7 +247,6 @@ params_results_a549_annotated_13 <-
 
 ```
 
-
 ### summarize the results (48h)
 
 ```{r}
@@ -270,3 +267,41 @@ summarized_a549_13<- params_results_a549_annotated_13 %>%
 
 
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+\$.GlobalEnv \[1\] "percentage_crop"
+
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
+
+\$`c("package:dplyr", "package:tidyr", "package:tibble")` \[1\] "as_tibble"
+
+\$`package:base` \[1\] "abs" "as.numeric" "c" "dim" "library" "max"\
+\[7\] "mean" "nrow" "paste0" "readRDS" "source" "substr"\
+\[13\] "substring" "unlist"
+
+\$`package:dplyr` \[1\] "arrange" "case_when" "left_join" "mutate" "pull" "rename"\
+\[7\] "row_number" "select" "slice_max" "summarize"
+
+\$`package:EBImage` \[1\] "readImage"
+
+\$`package:here` \[1\] "here"
+
+\$`package:jsonlite` \[1\] "fromJSON"
+
+\$`package:purrr` \[1\] "pluck"
+
+\$`package:stringr` \[1\] "fixed" "str_split" "str_sub"
+
+\$`package:tibble` \[1\] "rownames_to_column"
+
+\$`package:tidyr` \[1\] "expand_grid"

@@ -263,3 +263,39 @@ summarized_a172_13 <-
 
 
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+\$.GlobalEnv \[1\] "percentage_crop"
+
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
+
+\$`package:base` \[1\] "abs" "as.data.frame" "as.numeric" "c"\
+\[5\] "dim" "library" "max" "mean"\
+\[9\] "nrow" "paste0" "readRDS" "source"\
+\[13\] "substr" "substring" "unlist"
+
+\$`package:dplyr` \[1\] "arrange" "case_when" "left_join" "mutate" "rename" "row_number" \[7\] "select" "slice_max" "summarize"
+
+\$`package:EBImage` \[1\] "readImage"
+
+\$`package:here` \[1\] "here"
+
+\$`package:jsonlite` \[1\] "fromJSON"
+
+\$`package:purrr` \[1\] "pluck"
+
+\$`package:stringr` \[1\] "fixed" "str_split" "str_sub"
+
+\$`package:tibble` \[1\] "rownames_to_column"
+
+\$`package:tidyr` \[1\] "expand_grid"

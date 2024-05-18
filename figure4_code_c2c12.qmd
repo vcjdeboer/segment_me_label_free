@@ -292,3 +292,43 @@ summarized_c2c12 <- params_results_c2c12_annotated %>%
 
 
 ```
+
+#### my used function in this file
+
+```{r}
+
+#qmd code copied to R file
+#NCmisc::list.functions.in.file(here::here("prepration.R"))
+
+```
+
+all functions and packages in this files:
+
+\$.GlobalEnv \[1\] "get_nuclei" "get_nuclei_features_fancy" \[3\] "percentage_crop"
+
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
+
+\$`c("package:dplyr", "package:tidyr", "package:tibble")` \[1\] "as_tibble" "tibble"
+
+\$`character(0)` \[1\] "furrr_options" "future_map2"
+
+\$`package:base` \[1\] "abs" "c" "dim" "expand.grid" "is.na"\
+\[6\] "library" "mean" "nchar" "nrow" "paste0"\
+\[11\] "readRDS" "rep" "source" "substring"
+
+\$`package:dplyr` \[1\] "case_when" "left_join" "mutate" "n" "pull" "rename"\
+\[7\] "slice_max" "summarize"
+
+\$`package:EBImage` \[1\] "readImage"
+
+\$`package:future` \[1\] "plan"
+
+\$`package:here` \[1\] "here"
+
+\$`package:purrr` \[1\] "list_rbind" "pluck"
+
+\$`package:readr` \[1\] "parse_number"
+
+\$`package:stringr` \[1\] "str_detect" "str_sub"
+
+\$`package:tidyr` \[1\] "expand_grid"
