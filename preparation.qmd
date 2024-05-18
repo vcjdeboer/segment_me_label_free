@@ -5,39 +5,81 @@ format: html
 editor: visual
 ---
 
-
 ## themes & libraries
 
 ```{r}
 
-install.packages("BiocManager")
-
-BiocManager::install("EBImage")
-
-install.packages(c("imager", "imagerExtra", "magick"))
-
-install.packages(c("spatstat", "deldir", "ggforce", "mclust", "dbscan"))
-
-install.packages(c("pipeR", "tidyverse"))
-
-install.packages(c("furrr", "future"))
-
-install.packages(c("rmarkdown"))
-
-install.packages(c("tidyverse"))
-
-install.packages("fs")
-
-install.packages("here")
-
-#install.packages("inborutils")
-
-install.packages("devtools")
-devtools::install_github("inbo/inborutils")
-
+# install.packages("BiocManager")
+# 
+# BiocManager::install("EBImage")
+# 
+# install.packages(c("imager", "imagerExtra", "magick"))
+# 
+# install.packages(c("spatstat", "deldir", "ggforce", "mclust", "dbscan"))
+# 
+# install.packages(c("pipeR", "tidyverse"))
+# 
+# install.packages(c("furrr", "future"))
+# 
+# install.packages(c("rmarkdown"))
+# 
+# install.packages(c("tidyverse"))
+# 
+# install.packages("fs")
+# 
+# install.packages("here")
+# 
+# install.packages("devtools")
+# devtools::install_github("inbo/inborutils")
+# 
+# install.packages("geomtextpath")
+# 
+# install.packages("gt")
+#
+# install.packages("ggdist")
+#
+# install.packages("jsonlite")
+#
+# install.packages("NCmisc)
 
 ```
 
+```{r}
+
+#collection of all libraries in all figure qmd files
+library(tidyverse)
+library(future)
+library(here)
+
+library(fs)
+library(inborutils)
+
+library(EBImage)
+library(imager)
+library(imagerExtra)
+library(magick)
+
+library(mclust)
+
+library(geomtextpath)
+library(spatstat)
+library(gt)
+library(dbscan)
+
+library(pipeR)
+
+library(ggdist)
+library(ggforce)
+library(colorspace)
+
+library(jsonlite)
+
+library(NCmisc)
+
+library(shiny)
+library(shinyWidgets)
+
+```
 
 ```{r}
 
@@ -94,14 +136,12 @@ theme_maxTick <- function(){
 
 ```{r}
 
-#libraries
+#libraries in preparation.qmd
 library(tidyverse)
 library(fs)
 library(inborutils)
 
-
 ```
-
 
 ### download images
 
@@ -136,4 +176,29 @@ unzip(zipfile =
 
 ```
 
+
+
+all functions and packages in this files:
+
+$`character(0)`
+[1] "details" "list.functions.in.file" "session_info"          
+
+$`package:base`
+[1] "library"
+
+$`package:fs`
+[1] "dir_create"
+
+$`package:ggplot2`
+[1] "element_blank" "element_line"  "element_text"  "rel" "theme"        
+[6] "theme_bw"      "theme_classic"
+
+$`package:here`
+[1] "here"
+
+$`package:inborutils`
+[1] "download_zenodo"
+
+$`package:utils`
+[1] "unzip"
 
