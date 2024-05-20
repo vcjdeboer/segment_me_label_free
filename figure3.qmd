@@ -2,7 +2,7 @@
 title: "figure_3"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Density plots - figure 3

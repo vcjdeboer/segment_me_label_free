@@ -2,7 +2,7 @@
 title: "preparations"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## themes & libraries
@@ -41,6 +41,10 @@ editor: visual
 # install.packages("jsonlite")
 #
 # install.packages("NCmisc)
+#
+# install.packages(c("sf", "bslib", "shiny", "shinyWidgets)
+
+
 
 ```
 
@@ -58,6 +62,8 @@ library(EBImage)
 library(imager)
 library(imagerExtra)
 library(magick)
+
+library(deldir)
 
 library(mclust)
 
@@ -78,6 +84,8 @@ library(NCmisc)
 
 library(shiny)
 library(shinyWidgets)
+library(bslib)
+library(sf)
 
 ```
 

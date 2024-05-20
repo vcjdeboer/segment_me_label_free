@@ -2,7 +2,7 @@
 title: "figure_1"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Figure 1 - C2C12 C08

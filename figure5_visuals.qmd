@@ -2,7 +2,7 @@
 title: "figure_5"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Figure 5 spatial characterization

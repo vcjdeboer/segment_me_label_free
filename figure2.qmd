@@ -2,7 +2,7 @@
 title: "figure_2"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Figure 2 - seeds and voronois

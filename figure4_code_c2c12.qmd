@@ -2,7 +2,7 @@
 title: "figure_4 code C2C12"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## nuclei vs estimated cell number

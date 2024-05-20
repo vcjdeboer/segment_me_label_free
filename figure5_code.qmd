@@ -2,7 +2,7 @@
 title: "figure_5 code"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Figure 5 spatial characterization
@@ -317,7 +317,6 @@ mean_sd_char_six <- all_500_c2c12_mclust %>%
 
 ```
 
-
 ### Calculate the within cluster density of well A03 and B03 for figure 5C
 
 ```{r}
@@ -373,58 +372,40 @@ B3_dens_plot_data_new <- all_500_c2c12_mclust %>%
 
 all functions and packages in this files:
 
-Show in New Window
-$.GlobalEnv
-[1] "do_tesselation"           "my_loop_function_small_3"
-[3] "percentage_crop"          "plot_raster_with_dots"   
+Show in New Window \$.GlobalEnv \[1\] "do_tesselation" "my_loop_function_small_3" \[3\] "percentage_crop" "plot_raster_with_dots"
 
-$`c("package:dplyr", "package:stats")`
-[1] "filter"
+\$`c("package:dplyr", "package:stats")` \[1\] "filter"
 
-$`c("package:dplyr", "package:tidyr", "package:tibble")`
-[1] "tibble"
+\$`c("package:dplyr", "package:tidyr", "package:tibble")` \[1\] "tibble"
 
-$`character(0)`
-[1] "dbscan"        "densityMclust"
+\$`character(0)` \[1\] "dbscan" "densityMclust"
 
-$`package:base`
- [1] "abs"           "as.data.frame" "c"             "dim"          
- [5] "library"       "list"          "mean"          "names"        
- [9] "nrow"          "paste0"        "range"         "return"       
-[13] "round"         "sum"           "unique"        "unlist"       
-[17] "unname"        "with"         
+\$`package:base` \[1\] "abs" "as.data.frame" "c" "dim"\
+\[5\] "library" "list" "mean" "names"\
+\[9\] "nrow" "paste0" "range" "return"\
+\[13\] "round" "sum" "unique" "unlist"\
+\[17\] "unname" "with"
 
-$`package:dplyr`
- [1] "arrange"   "between"   "case_when" "left_join" "mutate"    "n"        
- [7] "nth"       "pull"      "select"    "slice"     "slice_max" "summarize"
+\$`package:dplyr` \[1\] "arrange" "between" "case_when" "left_join" "mutate" "n"\
+\[7\] "nth" "pull" "select" "slice" "slice_max" "summarize"
 
-$`package:EBImage`
-[1] "flip"      "readImage"
+\$`package:EBImage` \[1\] "flip" "readImage"
 
-$`package:ggplot2`
-[1] "aes"               "annotation_raster" "geom_point"        "ggplot"           
-[5] "labs"             
+\$`package:ggplot2` \[1\] "aes" "annotation_raster" "geom_point" "ggplot"\
+\[5\] "labs"
 
-$`package:grDevices`
-[1] "as.raster"
+\$`package:grDevices` \[1\] "as.raster"
 
-$`package:purrr`
-[1] "keep"       "list_rbind" "map"        "map_chr"    "map2"       "pluck"     
+\$`package:purrr` \[1\] "keep" "list_rbind" "map" "map_chr" "map2" "pluck"
 
-$`package:spatstat.explore`
-[1] "quadrat.test"
+\$`package:spatstat.explore` \[1\] "quadrat.test"
 
-$`package:spatstat.geom`
-[1] "coords" "owin"   "ppp"   
+\$`package:spatstat.geom` \[1\] "coords" "owin" "ppp"
 
-$`package:spatstat.random`
-[1] "runifpoint"
+\$`package:spatstat.random` \[1\] "runifpoint"
 
-$`package:stats`
-[1] "sd"
+\$`package:stats` \[1\] "sd"
 
-$`package:stringr`
-[1] "str_detect" "str_sub"   
+\$`package:stringr` \[1\] "str_detect" "str_sub"
 
-$`package:tidyr`
-[1] "nest"   "unnest"
+\$`package:tidyr` \[1\] "nest" "unnest"
