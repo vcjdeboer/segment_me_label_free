@@ -133,7 +133,7 @@ subset_EBImage <- function(image,
   
 }
 
-subset_imager <- function(image, 
+subset_imager_without_seed <- function(image, 
                           where = "rightbottomcorner",
                           subset_percentage = 0.15){
   
@@ -198,6 +198,90 @@ subset_imager <- function(image,
     
     ix <- c(my_x,max_x)
     iy <- c(my_y,max_y)
+  }
+  
+  
+  if (length(dim(image)) == 2){
+    cropped_image <- imsub(image,x %inr% ix, y %inr% iy)}
+  
+  if (length(dim(image)) == 3){
+    cropped_image <- imsub(image,x %inr% ix, y %inr% iy)}
+  
+  if (length(dim(image)) == 4){
+    cropped_image <- imsub(image,x %inr% ix, y %inr% iy)}
+  
+  return(cropped_image)
+  
+}
+
+subset_imager <- function(image, 
+                          where = "rightbottomcorner",
+                          subset_percentage = 0.15,
+                          my_seed = 23478){
+  
+  max_x <- dim(image)[1]
+  max_y <- dim(image)[2]
+  
+  if (where == "all"){
+    
+    ix <- c(0,max_x)
+    iy <- c(0,max_y)
+  }
+  
+  if (where == "rightbottomcorner"){
+    my_x <- round(max_x - subset_percentage * max_x)
+    my_y <- round(max_y - subset_percentage * max_y)
+    ix <- c(my_x,max_x)
+    iy <- c(my_y,max_y)
+  }
+  
+  if (where == "leftuppercorner"){
+    my_x <- round(subset_percentage * max_x)
+    my_y <- round(subset_percentage * max_y)
+    ix <- c(1,my_x)
+    iy <- c(1,my_y)
+  }
+  
+  if (where == "leftbottomcorner"){
+    my_x <- round(subset_percentage * max_x)
+    my_y <- round(max_y - subset_percentage * max_y)
+    ix <- c(1,my_x)
+    iy <- c(my_y,max_y)
+  }
+  
+  if (where == "rightuppercorner"){
+    my_x <- round(max_x - subset_percentage * max_x)
+    my_y <- round(subset_percentage * max_y)
+    ix <- c(my_x,max_x)
+    iy <- c(1,my_y)
+  }
+  
+  if (where == "middle"){
+    my_x <- round(max_x/2 - (subset_percentage/2 * max_x))
+    my_max_x <- round(max_x/2 + (subset_percentage/2 * max_x))
+    my_y <- round(max_y/2 - (subset_percentage/2 * max_y))
+    my_max_y <- round(max_y/2 + (subset_percentage/2 * max_y))
+    ix <- c(my_x,my_max_x)
+    iy <- c(my_y,my_max_y)
+  }
+  
+  if (where == "random"){
+    
+    x_allowed <- round(subset_percentage/2 * max_x +2):round((max_x - subset_percentage/2 * max_x) - 2)
+    y_allowed <- round(subset_percentage/2 * max_y +2):round((max_y - subset_percentage/2 * max_y) - 2)
+    
+    set.seed(my_seed)
+    
+    random_x <- sample(x_allowed, 1) 
+    random_y <- sample(y_allowed, 1) 
+    
+    my_x <- round(random_x - subset_percentage/2 * max_x)
+    my_max_x <- round(random_x + subset_percentage/2 * max_x)
+    my_y <- round(random_y - subset_percentage/2 * max_y)
+    my_max_y <- round(random_y + subset_percentage/2 * max_y)
+    
+    ix <- c(my_x,my_max_x)
+    iy <- c(my_y,my_max_y)
   }
   
   
