@@ -16,13 +16,54 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of segment_me_label_free is to ...
+The goal of segment_me_label_free is to quantitate cell numbers from high-content microscope images using only the image. We implement this for Bright-field label-free images and it does not require a training dataset.
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+To run the pipeline, we have a Shiny app that loads the bright field and is used to establish the cell size. This is important, because cell size is the variable that is used to optimize the parameter automation. We also have a function that takes as input the image and the cell size. The function returns the cell number and their xy position
 
-```{r cars}
-summary(cars)
+In the github, we also have all code organized in quarto note book that generates all data plots and tables from the paper
+
+## installation
+
+Install all the below packages to be able to run the functions and regenerate the plots
+
+```{r install, eval = FALSE, echo = TRUE}
+
+#required image analysis packages
+install.packages("BiocManager")
+BiocManager::install("EBImage")
+install.packages(c("imager", "imagerExtra", "magick"))
+
+#required data stats and plotting packages
+install.packages(c("spatstat", "deldir",  "mclust"))
+
+#required standard tidy and base R packages
+install.packages(c("pipeR", "tidyverse"))
+install.packages(c("furrr", "future"))
+install.packages("fs")
+install.packages("here")
+
+#used additionally in paper data figures and notebook
+install.packages("geomtextpath", )
+install.packages("gt")
+install.packages("ggdist", "ggforce", "dbscan")
+install.packages("jsonlite")
+install.packages("NCmisc")
+install.packages("devtools")
+devtools::install_github("inbo/inborutils")
+
+#required for shiny app
+install.packages(c("sf", "bslib", "shiny", "shinyWidgets"))
+
+#`r sprintf("![shiny_workflow](%s)", shiny_example.png)`
+
+
 ```
+
+## shiny
+
+Open the shiny app in Rstudio, by opening the app.R file and click `Run App`. You can upload your image and follow the three steps as described in the figure below
+
+![screenshot](shiny_example.png)
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date.
 
@@ -32,4 +73,3 @@ You can also embed plots, for example:
 plot(pressure)
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub.
