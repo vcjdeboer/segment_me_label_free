@@ -2,7 +2,7 @@
 title: "figure_4 code THP1"
 author: "vb"
 format: html
-editor: visual
+editor: source
 ---
 
 ## nuclei vs estimated cell number
@@ -106,7 +106,18 @@ future::plan(future::multisession, workers = 10)
 
 ```{r}
 
-features_THP1_1116_DAPI_pipe <- THP1_1116_pathnames_DAPI %>% 
+# .x <- THP1_1116_pathnames_DAPI %>% head(1) %>%  pull(path_name)
+# .y <- THP1_1116_pathnames_DAPI %>% head(1) %>%  pull(filename)
+# 
+# .x %>% 
+#     EBImage::readImage() %>%
+#     percentage_crop() %>% 
+#     get_nuclei_fancy_2(.y, 
+#                       ws_tol = 0.1,
+#                       my_clean = 2) %>% 
+#     get_nuclei_features_fancy_from_github(., .x,.y)
+
+features_THP1_1116_DAPI_pipe <- THP1_1116_pathnames_DAPI %>% #head(2) %>% 
     furrr::future_map2(.x = .$path_name,
                .y = .$filename,
                .f = ~ .x %>% 

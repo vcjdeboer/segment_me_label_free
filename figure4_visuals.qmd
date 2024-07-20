@@ -74,7 +74,21 @@ summarized_thp1 %>%
 
 
 ```
+#### THP1 relative difference (rebuttal)
 
+```{r}
+
+summarized_thp1 %>% 
+  select(file, n, nuclei) %>% 
+  #filter(n>300) %>% 
+  mutate(rel_diff = abs((n - nuclei)/n*100)) %>% 
+  summarize(mean = median(rel_diff))
+  ggplot(aes( x = n, y = rel_diff))+
+  geom_point()
+  
+
+
+```
 ### C2C12
 
 ```{r}
@@ -114,6 +128,22 @@ summarized_c2c12 %>%
       theme(aspect.ratio = 1)
 
 
+
+
+```
+
+#### C2C12 relative difference (rebuttal)
+
+```{r}
+
+summarized_c2c12 %>% 
+  select(file, n, nuclei) %>% 
+  #filter(n>300) %>% 
+  mutate(rel_diff = log(n) - log(nuclei)) %>% 
+  #summarize(mean = median(rel_diff))
+  ggplot(aes( x = nuclei, y = rel_diff))+
+  geom_point()
+  
 
 
 ```

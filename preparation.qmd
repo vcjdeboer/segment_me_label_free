@@ -40,9 +40,9 @@ editor: source
 #
 # install.packages("jsonlite")
 #
-# install.packages("NCmisc)
+# install.packages("NCmisc")
 #
-# install.packages(c("sf", "bslib", "shiny", "shinyWidgets)
+# install.packages(c("sf", "bslib", "shiny", "shinyWidgets"))
 
 
 
