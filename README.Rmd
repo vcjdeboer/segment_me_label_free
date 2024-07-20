@@ -1,5 +1,8 @@
 ---
+title: README
+
 output: github_document
+
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -11,23 +14,28 @@ knitr::opts_chunk$set(
 )
 ```
 
-# segment_me_label_free
 
 <!-- badges: start -->
+
+
 <!-- badges: end -->
 
-The goal of segment_me_label_free is to quantitate cell numbers from high-content microscope images using only the image. We implement this for Bright-field label-free images and it does not require a training dataset.
+![](logo.png)
 
-To run the pipeline, we have a Shiny app that loads the bright field and is used to establish the cell size. This is important, because cell size is the variable that is used to optimize the parameter automation. We also have a function that takes as input the image and the cell size. The function returns the cell number and their xy position
+Vincent de Boer^[Wageningen University, Human and Animal Physiology], 
+Xiang Zhang^[Wageningen University, Human and Animal Physiology]
+
+The goal of `segment_me_label_free` is to quantitate cell numbers from high-content microscope images using only the image. We implement this for Bright-field label-free images and it does not require a training dataset.
+
+To run the pipeline, we have a Shiny app that loads the bright field and is used to establish the cell size. This is important, because cell size is the variable that is used to optimize the parameter automation. We also have a function that takes as input the image and the cell size. The function returns the cell number and their xy position.
 
 In the github, we also have all code organized in quarto note book that generates all data plots and tables from the paper
 
-## installation
+## Installation
 
 Install all the below packages to be able to run the functions and regenerate the plots
 
 ```{r install, eval = FALSE, echo = TRUE}
-
 #required image analysis packages
 install.packages("BiocManager")
 BiocManager::install("EBImage")
@@ -53,23 +61,87 @@ devtools::install_github("inbo/inborutils")
 
 #required for shiny app
 install.packages(c("sf", "bslib", "shiny", "shinyWidgets"))
+```
 
-#`r sprintf("![shiny_workflow](%s)", shiny_example.png)`
+## Download zenodo data
+
+The images can be downloaded from Zenodo:
+
+```{r download, eval = FALSE, echo = TRUE}
+#create data directory in  your top project directory
+# In my case this is:
+my_root_folder <- 
+  "/Users/vincentdeboer/Documents/R"
+my_project_folder <- 
+  "segment_me_label_free"
+my_data_folder <- "data"
+
+fs::dir_create(here::here(my_data_folder))
+
+#download all C2C12 and THP1 images from zenodo
+inborutils::download_zenodo("10.5281/zenodo.11191023", 
+                            my_data_folder)
+
+# unzip c2c12
+unzip(zipfile = 
+        here::here(my_data_folder, 
+                   "20221207_1700_gt_C2C12.zip"),
+      exdir = here::here(my_data_folder, 
+                         "20221207_1700_gt_C2C12"))
+
+# unzip THP1
+unzip(zipfile = 
+        here::here(my_data_folder, 
+                   "20231116_1300_mm_THP1.zip"),
+      exdir = here::here(my_data_folder, 
+                         "20231116_1300_mm_THP1"))
+```
+
+## Shiny app
+
+Open the shiny app in Rstudio, by opening the `app.R` file and click `Run App`. You can upload your image, or used the provided images. If using the default images (C2C12 or THP1), make sure they are in the correct folder (see download chunk above). Follow the three steps as described in the figure below.
+
+It is recommended to draw at least 20 polygons. The average cell size is automatocally calculated.
+
+![shiny_example](shiny_example.png)
+
+## Pipeline master function
+
+Set the to input variables `filepath` and `cell_size_target`:
+
+```{r library_call, include=FALSE}
+library(tidyverse)
+library(here)
+```
+
+```{r variables}
+#set the filepath of your file (here we use one of our images (also available on github))
+filepath <- here::here("inst", "extdata", "20221207_1700_gt_C8_EXP4_BF.tif")
+
+#set the cell size target
+cell_size_target <-  223 #pixels
 
 
 ```
 
-## shiny
+Run the master function:
 
-Open the shiny app in Rstudio, by opening the app.R file and click `Run App`. You can upload your image and follow the three steps as described in the figure below
+PLEASE NOTE that iterating over the parameter set can take a long time. It depends on processor speed and parallization. The iteration is parallelized using `furrr:future_map` with default 10 workers.
 
-![screenshot](shiny_example.png)
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r source_functions, include=FALSE}
+source("R/master.R")
 ```
+
+```{r master}
+segmented_image <- segment_my_image(filepath, cell_size_target)
+
+# print the number of identified cells
+segmented_image$n
+
+#print the xy positions for an optimal solution
+segmented_image$xy %>% plot()
+
+```
+
+
 
