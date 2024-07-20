@@ -3,7 +3,7 @@
 get_nuclei_old <- function(img, filepath, 
                            my_offset = 0.02,
                            my_opening_brush_size = 3,
-                           brush_size = 21,
+                           brush_size = 21, #21
                            brush_type = "disc",
                            ws_tol = 1,
                            do_blur = FALSE,
@@ -12,6 +12,7 @@ get_nuclei_old <- function(img, filepath,
   # img <- filepath %>% EBImage::readImage() %>%
   # percentage_crop(crop_percentage)
   
+  #brush_size = 11
   
   
   #set constants for EBImage::filter2
@@ -173,7 +174,7 @@ get_nuclei_fancy_3 <- function(img, filepath,
     
     #unsharp masking from:
     #https://bioimagebook.github.io/chapters/2-processing/4-filters/filters.html#chap-filters
-    im_diff <- (img[,,1,1] - EBImage::filter2(img[,,1,1], disc)) 
+    im_diff <- (img[,,1,1] - EBImage::filter2(img[,,1,1], filter_brush)) 
     
     image_seed <-  (img[,,1,1] + sharpen_multiplier*im_diff) %>%
       EBImage::normalize() %>% 
@@ -198,7 +199,7 @@ get_nuclei_fancy_3 <- function(img, filepath,
   
   if(number_of_dimensions == 3){
     
-    im_diff <- (img[,,3] - EBImage::filter2(img[,,3], disc))
+    im_diff <- (img[,,3] - EBImage::filter2(img[,,3], filter_brush))
     
     image_seed <-  (img[,,3] + sharpen_multiplier*im_diff) %>%
       EBImage::normalize() %>% 
@@ -223,7 +224,7 @@ get_nuclei_fancy_3 <- function(img, filepath,
   if(number_of_dimensions == 2){
     
     
-    im_diff <- (img - EBImage::filter2(img, disc))
+    im_diff <- (img - EBImage::filter2(img, filter_brush))
     
     intermed <-  (img + sharpen_multiplier*im_diff) %>% 
       EBImage::normalize() %>% 
@@ -293,14 +294,17 @@ get_nuclei_fancy_4 <- function(img, filepath,
   #unsharp masking from:
   #https://bioimagebook.github.io/chapters/2-processing/4-filters/filters.html#chap-filters
   
+
+  
   im_diff <- img %>% 
     magrittr::subtract(EBImage::filter2(., filter_brush)) 
   
-  image_seed <-  img %>%
+img %>%
     magrittr::add(sharpen_multiplier*im_diff) %>% 
     EBImage::normalize() %>% 
     magick::image_read() %>% 
-    imager::magick2cimg() %>%  
+    imager::magick2cimg() %>% 
+    imagerExtra::EqualizeADP() %>%  
     imager::isoblur(.,my_sigma) %>% 
     imagerExtra::EqualizeADP() %>% 
     imagerExtra::SPE(my_SPE) %>% 
@@ -316,6 +320,16 @@ get_nuclei_fancy_4 <- function(img, filepath,
     structure(original_filepath = filepath)
   
   
+img %>% 
+  magick::image_read() %>%
+  imager::magick2cimg() %>%
+  imager::grayscale() %>% 
+  imager::isoblur(1) %>% 
+  imagerExtra::ThresholdAdaptive(
+    k = my_k, #0.1
+    windowsize = my_ws, #39
+    range = c(0,1)) %>% plot
+
   return(list(image_seed))
   
 }

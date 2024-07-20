@@ -1,7 +1,8 @@
 my_loop_function <- function(path_name,
                              well_name,
                              i,j,k,l,m,n, 
-                             crop_percentage = 0.05){
+                             crop_percentage = 0.05,
+                             pixset_dims){
   
   processed_image <- path_name %>% 
     EBImage::readImage() %>%
@@ -65,7 +66,8 @@ my_loop_function <- function(path_name,
 my_loop_function_small <- function(path_name, 
                                    well_name, 
                                    i,j,k,l,m,n, 
-                                   crop_percentage = 0.05){
+                                   crop_percentage = 0.05,
+                                   pixset_dims){
   
   seeds <- path_name %>%
     EBImage::readImage() %>%
@@ -132,7 +134,8 @@ my_loop_function_small_2 <- function(path_name,
 my_loop_function_small_3 <- function(path_name, 
                                      well_name, 
                                      i,j,k,l,m,n, 
-                                     crop_percentage = 0.05){
+                                     crop_percentage = 0.05,
+                                     pixset_dims){
   
   seeds <- path_name %>%
     EBImage::readImage() %>%
