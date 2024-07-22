@@ -21,7 +21,7 @@ also have a function that takes as input the image and the cell size.
 The function returns the cell number and their xy position.
 
 In the github, we also have all code organized in quarto note book that
-generates all data plots and tables from the paper
+generates all data plots and tables from the paper.
 
 ## Installation
 
@@ -108,7 +108,7 @@ automatocally calculated.
 
 ## Pipeline master function
 
-Set the to input variables `filepath` and `cell_size_target`:
+Set the two input variables `filepath` and `cell_size_target`:
 
 ``` r
 #set the filepath of your file (here we use one of our images (also available on github))
@@ -122,7 +122,7 @@ Run the master function:
 
 PLEASE NOTE that iterating over the parameter set can take a long time.
 It depends on processor speed and parallization. The iteration is
-parallelized using `furrr:future_map` with default 10 workers.
+parallelized using `furrr:future_pmap` with default 10 workers.
 
 ``` r
 segmented_image <- segment_my_image(filepath, cell_size_target)

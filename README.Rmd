@@ -29,7 +29,7 @@ The goal of `segment_me_label_free` is to quantitate cell numbers from high-cont
 
 To run the pipeline, we have a Shiny app that loads the bright field and is used to establish the cell size. This is important, because cell size is the variable that is used to optimize the parameter automation. We also have a function that takes as input the image and the cell size. The function returns the cell number and their xy position.
 
-In the github, we also have all code organized in quarto note book that generates all data plots and tables from the paper
+In the github, we also have all code organized in quarto note book that generates all data plots and tables from the paper.
 
 ## Installation
 
@@ -107,7 +107,7 @@ It is recommended to draw at least 20 polygons. The average cell size is automat
 
 ## Pipeline master function
 
-Set the to input variables `filepath` and `cell_size_target`:
+Set the two input variables `filepath` and `cell_size_target`:
 
 ```{r library_call, include=FALSE}
 library(tidyverse)
@@ -126,7 +126,7 @@ cell_size_target <-  223 #pixels
 
 Run the master function:
 
-PLEASE NOTE that iterating over the parameter set can take a long time. It depends on processor speed and parallization. The iteration is parallelized using `furrr:future_map` with default 10 workers.
+PLEASE NOTE that iterating over the parameter set can take a long time. It depends on processor speed and parallization. The iteration is parallelized using `furrr:future_pmap` with default 10 workers.
 
 ```{r source_functions, include=FALSE}
 source("R/master.R")
